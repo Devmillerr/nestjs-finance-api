@@ -1,12 +1,13 @@
 import { Response, Request } from 'express';
 import { UserServices } from '../services/users.services';
+const userServices = new UserServices();
+
 
 export class UserController {
-  constructor(private service: UserServices) {}
 
-  async getUser(res: Response, req: Request) {
+  async getUser(req: Request, res: Response) {
     const userId = req.params.id;
-    const getUser = this.service.get(+userId);
+    const getUser = userServices.get(+userId);
     res.json({
       data: getUser,
     });

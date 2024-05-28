@@ -6,6 +6,6 @@ export class UserServices {
   getAll() {}
 
   get(id: number) {
-    return userMocks.filter(r => r.id == id);
+    return userMocks.filter(r => r.id == id)[0];
   }
 }
