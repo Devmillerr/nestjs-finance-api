@@ -1,0 +1,10 @@
+[
+    {
+        "venta_id": 1,
+        "user_id": 1,
+        "order_id": 1001,
+        "payment_id": 2001,
+        "total_amount": 150.00,
+        "venta_date": "29-05-2024"
+    }
+]
