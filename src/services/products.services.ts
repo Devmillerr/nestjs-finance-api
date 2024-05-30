@@ -1,9 +1,11 @@
-import productMocks from '../utils/mocks/products.json';
+import productMocks from '../utils/mocks/product.json'
 
 export class ProductServices {
-  private products = productMocks;
+    create() {}
 
-  get(id: number) {
-    return this.products.find(product => product.id === id);
-  }
+    getAll() {}
+
+    get(id: number){
+        return productMocks.filter(r => r.id == id)
+    }
 }
