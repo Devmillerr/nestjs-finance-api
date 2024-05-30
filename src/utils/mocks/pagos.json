@@ -1,0 +1,18 @@
+[
+    {
+    "payment_id": 1,
+    "order_id": 101,
+    "amount": 150.75,
+    "payment_date": "2024-05-29",
+    "payment_method": "Credit Card",
+    "payment_status": "Completed"
+    },
+    {
+    "payment_id": 2,
+    "order_id": 102,
+    "amount": 85.50,
+    "payment_date": "2024-05-28",
+    "payment_method": "PayPal",
+    "payment_status": "Pending"
+    }
+]
