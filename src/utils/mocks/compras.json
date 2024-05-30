@@ -1,0 +1,18 @@
+[
+    {
+      "id": 1,
+      "user_id": 1,
+      "fecha_compra": "24-05-2024",
+      "total": 229.98,
+      "productos": [
+        {
+          "product_id": 1,
+          "quantity": 1
+        },
+        {
+          "product_id": 2,
+          "quantity": 1
+        }
+      ]
+    }
+  ]
