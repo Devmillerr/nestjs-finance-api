@@ -9,6 +9,7 @@ import detuser from './detuser';
 import compra from './compra';
 import venta from './venta';
 import pagos from './pagos';
+import ordenc from './ordenc'
 
 
 const router = express.Router();
@@ -27,5 +28,7 @@ router.use('/detuser', detuser);
 router.use('/compra', compra);
 router.use('/venta', venta);
 router.use('/pago', pagos);
+router.use('/orden', ordenc)
+
 
 export default router;
