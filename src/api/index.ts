@@ -5,7 +5,7 @@ import emojis from './emojis';
 import users from './users';
 import carts from './carts'
 import products from './products';
-import detuser from './detuser';
+import detuser from './detailsusers';
 import compra from './compra';
 import venta from './venta';
 import pagos from './pagos';

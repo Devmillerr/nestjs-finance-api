@@ -4,6 +4,6 @@ import { VentaController } from '../controllers/venta.controller';
 const router = express.Router();
 const ventaController = new VentaController();
 
-router.get('/:id', (req, res) => ventaController.getVentaById(req, res)); 
+router.get('/:id', ventaController.getVentaById); 
 
 export default router;
