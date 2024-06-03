@@ -9,7 +9,7 @@ import detuser from './detuser';
 import compra from './compra';
 import venta from './venta';
 import pagos from './pagos';
-import ordenc from './ordenc'
+import ordenc from './ordenc';
 
 
 const router = express.Router();
