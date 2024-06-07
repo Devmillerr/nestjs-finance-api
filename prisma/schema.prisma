@@ -74,11 +74,13 @@ model products {
 }
 
 model purchases {
-  id     String @id @default(uuid())
-  user   users  @relation(fields: [userId], references: [id])
-  userId String
-
+  id                 String               @id @default(uuid())
+  user               users                @relation(fields: [userId], references: [id])
+  userId             String
+  payment_method     payment_methodTypes  @default(Paypal)
+  payment_status     paymentTypes         @default(Not_Completed)
   createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
   purchases_products purchases_products[]
 }
 
@@ -90,25 +92,16 @@ model purchases_products {
   productId  String
 }
 
-model bills {
-  id             String              @id @default(uuid())
-  //bills_id String
-  amount         Float
-  payment_date   DateTime            @default(now())
-  payment_method payment_methodTypes @default(Paypal)
-  payment_status paymentTypes        @default(Not_Completed)
-}
-
-// TODO: agregar el tema de presupuesto y facturas
-
 model budgets {
-  id              String            @id @default(uuid())
-  user            users             @relation(fields: [userId], references: [id])
+  id              String              @id @default(uuid())
+  user            users               @relation(fields: [userId], references: [id])
   userId          String
   description     String
   total           Float
-  createdAT       DateTime          @default(now())
-  updatedAT       DateTime          @updatedAt
+  payment_method  payment_methodTypes @default(Paypal)
+  payment_status  paymentTypes        @default(Not_Completed)
+  createdAT       DateTime            @default(now())
+  updatedAT       DateTime            @updatedAt
   budget_products budget_products[]
 }
 

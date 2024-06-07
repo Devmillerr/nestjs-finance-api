@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { VentaService } from '../services/venta.services';
+import { VentaService } from '../services/database/venta.services';
 
 const ventaService = new VentaService();
 

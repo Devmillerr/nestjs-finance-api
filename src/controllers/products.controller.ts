@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { ProductServices } from '../services/products.services';
+import { ProductServices } from '../services/database/products.services';
 const productServices = new ProductServices();
 
 export class ProductController {
@@ -14,7 +14,7 @@ export class ProductController {
 }
 
 
-  /* <<<<<<< AntonioZ
+/* <<<<<<< AntonioZ
   async getProduct(req: Request, res: Response) {
     const productId = req.params.id;
     const getProduct = await productServices.get(+productId);

@@ -1,4 +1,4 @@
-import compras from '../utils/mocks/compras.json';
+import compras from '../../utils/mocks/compras.json';
 
 interface Compra {
   id: number;

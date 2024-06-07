@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { BudgetServices } from '../services/budget.services';
+import { BudgetServices } from '../services/database/budget.services';
 
 const budgetService = new BudgetServices();
 
