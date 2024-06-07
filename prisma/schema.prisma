@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 enum productTypes {
@@ -26,10 +26,11 @@ enum paymentTypes {
 }
 
 enum payment_methodTypes {
-  Paypal 
+  Paypal
   Stripe
   Crypto
 }
+
 model users {
   id        String   @id @default(uuid())
   email     String
@@ -89,7 +90,15 @@ model purchases_products {
   productId  String
 }
 
-<<<<<<< HEAD
+model bills {
+  id             String              @id @default(uuid())
+  //bills_id String
+  amount         Float
+  payment_date   DateTime            @default(now())
+  payment_method payment_methodTypes @default(Paypal)
+  payment_status paymentTypes        @default(Not_Completed)
+}
+
 // TODO: agregar el tema de presupuesto y facturas
 
 model budgets {
@@ -110,15 +119,3 @@ model budget_products {
   budgetId  String
   productId String
 }
-=======
-
-// TODO: agregar el tema de presupuesto y facturas
-model bills {
-  id     String @id @default(uuid())
-  //bills_id String
-  amount Float 
-  payment_date DateTime  @default(now())
-  payment_method payment_methodTypes @default(Paypal)
-  payment_status paymentTypes @default(Not_Completed)       
-}
->>>>>>> fde17e92322bfbbed23ca30421d358c8f51a51b2
