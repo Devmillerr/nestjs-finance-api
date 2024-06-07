@@ -28,6 +28,7 @@ model users {
   userdetails   userDetails @relation(references: [id], fields: [userdetailsId])
   userdetailsId String      @unique
   purchases     purchases[]
+  budgets       budgets[]
 
   @@index([email])
 }
@@ -57,6 +58,7 @@ model products {
   createdAt          DateTime             @default(now())
   updatedAT          DateTime             @updatedAt
   purchases_products purchases_products[]
+  budget_products    budget_products[]
 }
 
 model purchases {
@@ -77,3 +79,22 @@ model purchases_products {
 }
 
 // TODO: agregar el tema de presupuesto y facturas
+
+model budgets {
+  id              String            @id @default(uuid())
+  user            users             @relation(fields: [userId], references: [id])
+  userId          String
+  description     String
+  total           Float
+  createdAT       DateTime          @default(now())
+  updatedAT       DateTime          @updatedAt
+  budget_products budget_products[]
+}
+
+model budget_products {
+  id        String   @id @default(uuid())
+  budget    budgets  @relation(fields: [budgetId], references: [id])
+  product   products @relation(fields: [productId], references: [id])
+  budgetId  String
+  productId String
+}
