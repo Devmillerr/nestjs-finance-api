@@ -19,6 +19,17 @@ enum productTypes {
   DISCORD_BOT
 }
 
+enum paymentTypes {
+  Completed
+  Pending
+  Not_Completed
+}
+
+enum payment_methodTypes {
+  Paypal 
+  Stripe
+  Crypto
+}
 model users {
   id        String   @id @default(uuid())
   email     String
@@ -79,9 +90,10 @@ model purchases_products {
 
 // TODO: agregar el tema de presupuesto y facturas
 model bills {
-  id         String    @id @default(uuid())
-  bills_id   Float 
-  amount     Float
-
-createdAt          DateTime             @default(now())
+  id     String @id @default(uuid())
+  //bills_id String
+  amount Float 
+  payment_date DateTime  @default(now())
+  payment_method payment_methodTypes @default(Paypal)
+  payment_status paymentTypes @default(Not_Completed)       
 }
