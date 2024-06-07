@@ -113,9 +113,11 @@ model budgets {
 }
 
 model budget_products {
-  id        String   @id @default(uuid())
-  budget    budgets  @relation(fields: [budgetId], references: [id])
-  product   products @relation(fields: [productId], references: [id])
-  budgetId  String
-  productId String
+  id          String   @id @default(uuid())
+  title       String?
+  description String?  @db.Text //textos largos
+  budget      budgets  @relation(fields: [budgetId], references: [id])
+  product     products @relation(fields: [productId], references: [id])
+  budgetId    String
+  productId   String
 }
