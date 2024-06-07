@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
 }
 
 enum productTypes {
@@ -76,4 +76,12 @@ model purchases_products {
   productId  String
 }
 
+
 // TODO: agregar el tema de presupuesto y facturas
+model bills {
+  id         String    @id @default(uuid())
+  bills_id   Float 
+  amount     Float
+
+createdAt          DateTime             @default(now())
+}

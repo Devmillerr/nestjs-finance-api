@@ -5,7 +5,7 @@ const router = express.Router();
 const compraController = new CompraController();
 
 // TODO: cambiar de (req, res) => compraController.getCompraById(req, res) a compraController.getCompraById
-router.get('/:id', (req, res) => compraController.getCompraById(req, res)); 
+router.get('/:id', compraController.getCompraById); 
 
 export default router;
 
