@@ -1,5 +1,4 @@
-import userMocks from "../utils/mocks/user.json";
-import { db } from "./db";
+import { db } from  './db';
 
 export class UserServices {
   create() {
