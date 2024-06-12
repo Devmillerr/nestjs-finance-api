@@ -1,17 +1,20 @@
-import { db } from '../db'
+import { db } from '../db';
+
 export class OrderServices {
+  create() {
+    
+  }
 
- create() {}
+  getAll() {
+    
+  }
 
- getAll() {}
-
- get(id: string){
-  return db.users.findUnique({
-    where: { id }, 
-    include: {
-        userdetails: true,
-    }
-  })
- }
-
+  get(id: string) {
+    return db.orders.findUnique({
+      where: { id },
+      include: {
+        order_products: true, 
+      },
+    });
+  }
 }
