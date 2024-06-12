@@ -26,7 +26,7 @@ export class UserServices {
     return db.orders.findUnique({
       where: { id },
       include: {
-        ordersdetails: true,
+        orderdetails: true,
       },
     });
   }

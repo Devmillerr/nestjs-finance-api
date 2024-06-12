@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum productTypes {s
+enum productTypes {
   WEB
   FIVEM
   DISCORD_BOT
@@ -72,7 +72,7 @@ model products {
   updatedAT          DateTime             @updatedAt
   purchases_products purchases_products[]
   budget_products    budget_products[]
-  order_products     order_products[]
+  orderdetails order_details[]
 }
 
 model purchases {
@@ -126,13 +126,15 @@ model orders {
   total          Float
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
-  order_products order_products[]
+  orderdetails   order_details[]
 }
 
-model order_products {
-  id        String   @id @default(uuid())
-  order     orders   @relation(fields: [orderId], references: [id])
-  product   products @relation(fields: [productId], references: [id])
-  orderId   String
-  productId String
+model order_details {
+  id         String   @id @default(uuid())
+  order      orders   @relation(fields: [orderId], references: [id])
+  orderId    String
+  product    products @relation(fields: [productId], references: [id])
+  productId  String
+  quantity   Int
+  price      Float
 }

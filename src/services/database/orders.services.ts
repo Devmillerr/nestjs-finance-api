@@ -13,7 +13,7 @@ export class OrderServices {
     return db.orders.findUnique({
       where: { id },
       include: {
-        order_products: true, 
+        orderdetails: true, 
       },
     });
   }
