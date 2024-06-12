@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum productTypes {
+enum productTypes {s
   WEB
   FIVEM
   DISCORD_BOT
@@ -25,7 +25,7 @@ enum paymentTypes {
   Not_Completed
 }
 
-enum payment_methodTypes {
+enum payment_method_Types {
   Paypal
   Stripe
   Crypto
@@ -79,7 +79,7 @@ model purchases {
   id                 String               @id @default(uuid())
   user               users                @relation(fields: [userId], references: [id])
   userId             String
-  payment_method     payment_methodTypes  @default(Paypal)
+  payment_method     payment_method_Types  @default(Paypal)
   payment_status     paymentTypes         @default(Not_Completed)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
@@ -100,7 +100,7 @@ model budgets {
   userId          String
   description     String
   total           Float
-  payment_method  payment_methodTypes @default(Paypal)
+  payment_method  payment_method_Types @default(Paypal)
   payment_status  paymentTypes        @default(Not_Completed)
   createdAT       DateTime            @default(now())
   updatedAT       DateTime            @updatedAt
@@ -121,7 +121,7 @@ model orders {
   id             String              @id @default(uuid())
   user           users               @relation(fields: [userId], references: [id])
   userId         String
-  payment_method payment_methodTypes @default(Paypal)
+  payment_method payment_method_Types @default(Paypal)
   payment_status paymentTypes        @default(Not_Completed)
   total          Float
   createdAt      DateTime            @default(now())

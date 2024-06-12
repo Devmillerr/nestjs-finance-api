@@ -23,10 +23,10 @@ export class UserServices {
   getAll() {}
 
   get(id: string) {
-    return db.users.findUnique({
+    return db.orders.findUnique({
       where: { id },
       include: {
-        userdetails: true,
+        ordersdetails: true,
       },
     });
   }
