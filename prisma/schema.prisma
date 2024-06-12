@@ -41,6 +41,7 @@ model users {
   userdetailsId String      @unique
   purchases     purchases[]
   budgets       budgets[]
+  orders        orders[]
 
   @@index([email])
 }
@@ -71,6 +72,7 @@ model products {
   updatedAT          DateTime             @updatedAt
   purchases_products purchases_products[]
   budget_products    budget_products[]
+  order_products     order_products[]
 }
 
 model purchases {
@@ -113,4 +115,24 @@ model budget_products {
   product     products @relation(fields: [productId], references: [id])
   budgetId    String
   productId   String
+}
+
+model orders {
+  id             String              @id @default(uuid())
+  user           users               @relation(fields: [userId], references: [id])
+  userId         String
+  payment_method payment_methodTypes @default(Paypal)
+  payment_status paymentTypes        @default(Not_Completed)
+  total          Float
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  order_products order_products[]
+}
+
+model order_products {
+  id        String   @id @default(uuid())
+  order     orders   @relation(fields: [orderId], references: [id])
+  product   products @relation(fields: [productId], references: [id])
+  orderId   String
+  productId String
 }
