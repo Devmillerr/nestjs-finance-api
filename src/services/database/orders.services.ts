@@ -6,7 +6,6 @@ export class OrderServices {
   }
 
   getAll() {
-    
   }
 
   get(id: string) {
