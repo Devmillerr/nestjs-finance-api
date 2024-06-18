@@ -12,14 +12,3 @@ export class ProductController {
     });
   }
 }
-
-
-/* <<<<<<< AntonioZ
-  async getProduct(req: Request, res: Response) {
-    const productId = req.params.id;
-    const getProduct = await productServices.get(+productId);
-    res.json({
-      data: getProduct,
-    });
-  }
-}*/

@@ -41,7 +41,6 @@ model users {
   userdetailsId String      @unique
   purchases     purchases[]
   budgets       budgets[]
-  orders        orders[]
 
   @@index([email])
 }
@@ -72,14 +71,13 @@ model products {
   updatedAT          DateTime             @updatedAt
   purchases_products purchases_products[]
   budget_products    budget_products[]
-  orderdetails order_details[]
 }
 
 model purchases {
   id                 String               @id @default(uuid())
   user               users                @relation(fields: [userId], references: [id])
   userId             String
-  payment_method     payment_method_Types  @default(Paypal)
+  payment_method     payment_method_Types @default(Paypal)
   payment_status     paymentTypes         @default(Not_Completed)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
@@ -95,15 +93,15 @@ model purchases_products {
 }
 
 model budgets {
-  id              String              @id @default(uuid())
-  user            users               @relation(fields: [userId], references: [id])
+  id              String               @id @default(uuid())
+  user            users                @relation(fields: [userId], references: [id])
   userId          String
   description     String
   total           Float
   payment_method  payment_method_Types @default(Paypal)
-  payment_status  paymentTypes        @default(Not_Completed)
-  createdAT       DateTime            @default(now())
-  updatedAT       DateTime            @updatedAt
+  payment_status  paymentTypes         @default(Not_Completed)
+  createdAT       DateTime             @default(now())
+  updatedAT       DateTime             @updatedAt
   budget_products budget_products[]
 }
 
@@ -111,30 +109,9 @@ model budget_products {
   id          String   @id @default(uuid())
   title       String?
   description String?  @db.Text //textos largos
+  price       Float
   budget      budgets  @relation(fields: [budgetId], references: [id])
   product     products @relation(fields: [productId], references: [id])
   budgetId    String
   productId   String
-}
-
-model orders {
-  id             String              @id @default(uuid())
-  user           users               @relation(fields: [userId], references: [id])
-  userId         String
-  payment_method payment_method_Types @default(Paypal)
-  payment_status paymentTypes        @default(Not_Completed)
-  total          Float
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  orderdetails   order_details[]
-}
-
-model order_details {
-  id         String   @id @default(uuid())
-  order      orders   @relation(fields: [orderId], references: [id])
-  orderId    String
-  product    products @relation(fields: [productId], references: [id])
-  productId  String
-  quantity   Int
-  price      Float
 }

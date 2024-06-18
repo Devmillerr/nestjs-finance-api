@@ -7,7 +7,7 @@ export class UserController {
 
   async getUser(req: Request, res: Response) {
     const userId = req.params.id;
-    const getUser = userServices.get(userId);
+    const getUser = await userServices.get(userId);
     res.json({
       data: getUser,
     });
