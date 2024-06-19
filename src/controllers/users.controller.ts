@@ -41,13 +41,12 @@ export class UserController {
   }
 
 async remove(req: Request, res: Response){
-const removeUser = await userServices.remove(
-  {
-    id: req.params.id
-  })
+  const removeUser = await userServices.remove({
+    id: req.params.id,
+  });
   res.json({
-    data: removeUser
-  })
+    data: removeUser,
+  });
 }
 
 }

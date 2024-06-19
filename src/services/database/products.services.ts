@@ -1,11 +1,38 @@
-import productMocks from '../../utils/mocks/product.json';
+import { db } from '../db'
+import { products, Prisma } from '@prisma/client'
 
 export class ProductServices {
-  create() {}
+  create(data: Prisma.productsCreateInput): Promise<products> {
+    return db.products.create({
+      data,
+    });
+  }
 
-  getAll() {}
+  getAll(where?: Prisma.productsWhereInput): Promise<products[]> {
+    return db.products.findMany({
+      where,
+    });
+  }
 
-  get(id: number) {
-    return productMocks.filter(r => r.id == id);
+  getOne(where: Prisma.productsWhereUniqueInput): Promise<products | null> {
+    return db.products.findUnique({
+      where,
+    });
+  }
+
+  update(
+    data: Prisma.productsUpdateInput,
+    where: Prisma.productsWhereUniqueInput
+  ): Promise<products> {
+    return db.products.update({
+      data,
+      where,
+    });
+  }
+
+  remove(where: Prisma.productsWhereUniqueInput): Promise<products> {
+    return db.products.delete({
+      where,
+    });
   }
 }

@@ -15,12 +15,12 @@ export class UserServices {
  }
 
  getOne(where: Prisma.usersWhereUniqueInput): Promise<users | null> {
- return db.users.findUnique({
-  where,
-  include: {
-    userdetails: true
-  }
- })
+   return db.users.findUnique({
+     where,
+     include: {
+       userdetails: true,
+     },
+   });
  }
  
  update(

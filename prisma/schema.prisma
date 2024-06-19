@@ -79,6 +79,7 @@ model purchases {
   userId             String
   payment_method     payment_method_Types @default(Paypal)
   payment_status     paymentTypes         @default(Not_Completed)
+
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   purchases_products purchases_products[]
@@ -108,7 +109,7 @@ model budgets {
 model budget_products {
   id          String   @id @default(uuid())
   title       String?
-  description String?  @db.Text //textos largos
+  description String?  @db.Text
   price       Float
   budget      budgets  @relation(fields: [budgetId], references: [id])
   product     products @relation(fields: [productId], references: [id])

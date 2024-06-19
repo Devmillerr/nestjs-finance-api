@@ -6,7 +6,7 @@ const userController = new UserController();
 
 // TODO: Terminar el CRUD -> CREATE - READ - UPDATE - DELETE
 
-router.get('/u/:id', userController.getAll)
+router.get("/u/:id", userController.getAll);
 router.use('/p/:id', userController.getOne)
 router.post('/', userController.create)
 router.put('/', userController.update)
