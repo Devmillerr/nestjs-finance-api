@@ -5,8 +5,8 @@ const router = express.Router();
 const budgetController = new BudgetController();
 
 // TODO Rutas para obtener presupuestos
-router.get('/todo/:id', budgetController.getAll);
-router.get('/unique/:id', budgetController.getOne);
+router.get('/p/:id', budgetController.getAll);
+router.get('/u/:id', budgetController.getOne);
 
 // TODO para crear, actualizar y eliminar presupuestos
 router.post('/', budgetController.create);
