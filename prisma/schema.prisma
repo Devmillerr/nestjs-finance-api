@@ -37,8 +37,8 @@ model users {
   password  String
   createdAt DateTime @default(now())
 
-  userdetails   userDetails @relation(references: [id], fields: [userdetailsId])
-  userdetailsId String      @unique
+  userdetails   userDetails? @relation(references: [id], fields: [userdetailsId])
+  userdetailsId String?      @unique
   purchases     purchases[]
   budgets       budgets[]
 
