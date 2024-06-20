@@ -25,19 +25,19 @@ export class BudgetController{
   }
 
   async create(req: Request, res: Response) {
-    const newUser = await budgetServices.create(req.body);
+    const newBudget = await budgetServices.create(req.body);
     res.json({
-      data: newUser
+      data: newBudget
     })
   }
 
   async update (req: Request, res: Response) {
-    const updateUser =  await budgetServices.update(
+    const updateBudget =  await budgetServices.update(
       req.body,
       {id: req.params.id}
     )
     res.json({
-      data:updateUser,
+      data:updateBudget,
     })
   }
 

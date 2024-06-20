@@ -26,19 +26,19 @@ export class ProductController {
 
 
   async create(req: Request, res: Response){
-    const newUser = await productServices.create(req.body);
+    const newProduct = await productServices.create(req.body);
     res.json({
-      data: newUser
+      data: newProduct
     })
   }
 
   async update(req: Request, res: Response){
-    const updateUser = await productServices.update(
+    const updateProduct = await productServices.update(
       req.body,
       {id: req.params.id}
     )
     res.json({
-      data:updateUser,
+      data:updateProduct,
     })
   }
 
