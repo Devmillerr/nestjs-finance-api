@@ -1,18 +1,54 @@
 import { Request, Response } from 'express';
 import { BudgetServices } from '../services/database/budget.services';
+const budgetServices = new BudgetServices();
 
-const budgetService = new BudgetServices();
+export class BudgetController{
 
-// TODO: Terminar el CRUD -> CREATE - READ - UPDATE - DELETE
+  async getAll(req: Request, res: Response) {
+    const budgets = await budgetServices.getAll({
+      id: req.params.id,
+    })
 
-export class BudgetController {
-  async getBudget(req: Request, res: Response) {
-    const budgetId = req.params.id;
-    const budget = await budgetService.get(budgetId);
-    if (budget) {
-      res.json({ data: budget });
-    } else {
-      res.status(404).json({ error: 'Budget not found' });
-    }
+    res.json({
+      budgets,
+    })
   }
+  
+ async getOne(req: Request, res: Response) {
+    const budget = await budgetServices.getOne({
+      id: req.params.id,
+    })  
+
+    res.json({
+      budget,
+    });
+  }
+
+  async create(req: Request, res: Response) {
+    const newUser = await budgetServices.create(req.body);
+    res.json({
+      data: newUser
+    })
+  }
+
+  async update (req: Request, res: Response) {
+    const updateUser =  await budgetServices.update(
+      req.body,
+      {id: req.params.id}
+    )
+    res.json({
+      data:updateUser,
+    })
+  }
+
+  async remove(req: Request,  res: Response) {
+    const removeUser = await budgetServices.remmove({
+      id: req.params.id,
+    })
+    res.json({
+      data : removeUser
+    })
+  }
+
 }
+

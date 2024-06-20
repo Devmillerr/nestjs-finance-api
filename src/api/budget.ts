@@ -4,8 +4,13 @@ import { BudgetController } from '../controllers/budget.controller';
 const router = express.Router();
 const budgetController = new BudgetController();
 
-// TODO: Terminar el CRUD -> CREATE - READ - UPDATE - DELETE
+// TODO Rutas para obtener presupuestos
+router.get('/todo/:id', budgetController.getAll);
+router.get('/unique/:id', budgetController.getOne);
 
-router.get('/:id', budgetController.getBudget);
+// TODO para crear, actualizar y eliminar presupuestos
+router.post('/', budgetController.create);
+router.put('/:id', budgetController.update);
+router.delete('/:id', budgetController.remove);
 
-export default router;
+export default router

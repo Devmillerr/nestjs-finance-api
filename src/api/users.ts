@@ -4,12 +4,14 @@ import { UserController } from '../controllers/users.controller';
 const router = express.Router();
 const userController = new UserController();
 
-// TODO: Terminar el CRUD -> CREATE - READ - UPDATE - DELETE
 
+// TODO Rutas para obtener usuarios
 router.get("/u/:id", userController.getAll);
 router.use('/p/:id', userController.getOne)
+
+// TODO para crear, actualizar y eliminar usuarios
 router.post('/', userController.create)
-router.put('/', userController.update)
-router.delete('/', userController.remove)
+router.put('/:id', userController.update)
+router.delete('/:id', userController.remove)
 
 export default router;

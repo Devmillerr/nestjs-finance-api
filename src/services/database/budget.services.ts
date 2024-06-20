@@ -1,38 +1,39 @@
 import { db } from '../db';
+import { budgets, Prisma } from '@prisma/client';
 
 export class BudgetServices {
-  create() {
+  create(data: Prisma.budgetsCreateInput): Promise<budgets> {
     return db.budgets.create({
-      data: {
-        userId: '1',
-        total: 20,
-        description: 'Este es el presupuesto',
-      },
+      data,
     });
   }
+  
 
-  getAll() {
+  getAll(where: Prisma.budgetsWhereInput): Promise<budgets[]> { 
     return db.budgets.findMany({
-      include: {
-        budget_products: {
-          include: {
-            product: true,
-          },
-        },
-      },
+      where,
     });
   }
 
-  get(id: string) {
+  getOne(where: Prisma.budgetsWhereUniqueInput): Promise<budgets | null> {
     return db.budgets.findUnique({
-      where: { id },
-      include: {
-        budget_products: {
-          include: {
-            product: true,
-          },
-        },
-      },
+      where,
+    });
+  }
+
+  update(
+    data: Prisma.budgetsUpdateInput,
+    where: Prisma.budgetsWhereUniqueInput
+  ): Promise<budgets> {
+    return db.budgets.update({
+      data,
+      where,
+    });
+  }
+
+  remmove(where: Prisma.budgetsWhereUniqueInput): Promise<budgets> {
+    return db.budgets.delete({
+      where,
     });
   }
 }
