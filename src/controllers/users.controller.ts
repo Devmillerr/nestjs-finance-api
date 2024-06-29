@@ -24,9 +24,18 @@ export class UserController {
   }
 
   async create(req: Request, res: Response){
-    const newUser = await userServices.create(req.body);
+    if(Object.values(req.body).length === 0){
+      return res.status(400).json({
+        message: 'No data provided',
+      });
+    }
+
+    const newUser = await userServices.create({
+      email: req.body.email,
+      password: req.body.password,
+    });
     res.json({
-      data: newUser
+      data: newUser,
     })
   }
 

@@ -5,7 +5,7 @@ export class UserServices {
  create(data: Prisma.usersCreateInput): Promise<users> {
   return db.users.create({
     data,
-  })
+  });
  }
 
  getAll(where?: Prisma.usersWhereInput): Promise<users[]> {
