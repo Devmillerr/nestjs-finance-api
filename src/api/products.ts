@@ -7,8 +7,8 @@ const router = express.Router();
 const productController = new ProductController();
 
 // TODO Rutas para obtener productos
-router.get('/p/:id', validatorHandler(ID_UUID, 'params'), productController.getAll);
-router.get('/u/:id', productController.getOne);
+router.get('/All', productController.getAll);
+router.get('/u/:id', validatorHandler(ID_UUID, 'params'), productController.getOne);
 
 // TODO para crear, actualizar y eliminar productos
 router.post('/', productController.create);
