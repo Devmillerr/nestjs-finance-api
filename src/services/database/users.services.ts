@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { users, Prisma } from "@prisma/client";
+import { users, Prisma, userDetails } from "@prisma/client";
 
 export class UserServices {
  create(data: Prisma.usersCreateInput): Promise<users> {
@@ -34,7 +34,31 @@ export class UserServices {
     }
   )
  }
+
+ createDetails(data: Prisma.userDetailsCreateInput) {
+  return db.userDetails.create({
+    data
+  })
+ }
+
+OneDetails(where: Prisma.userDetailsWhereUniqueInput) {
+  return db.userDetails.findUnique({
+    where
+  })
+ }
+
+ updateDetails(
+  where: Prisma.userDetailsWhereUniqueInput, data: Prisma.userDetailsUpdateInput
+ ) {
+  return db.userDetails.update(
+    {
+      where,
+      data
+    }
+  )
+ }
  
+
  remove(where: Prisma.usersWhereUniqueInput){
   return db.users.delete({
     where,

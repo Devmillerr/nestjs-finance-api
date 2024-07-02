@@ -14,6 +14,3 @@ export const USERDETAILS_CREATE_SCHEMA = Joi.object({
     address: Joi.string().min(1).max(255),
     phone: Joi.string().pattern(RegExp(/^[0-9+\-().\s]{7,15}$/)),
 })
-
-export const PRODUCT_CREATE_SCHEMA = ""
-

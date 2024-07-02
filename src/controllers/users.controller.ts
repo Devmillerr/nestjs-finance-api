@@ -50,16 +50,61 @@ export class UserController {
   }
 
   async update(req: Request, res: Response){
-    const updateUser = await userServices.update(
-      req.body,
-      {id: req.params.id}
-    )
+    let body = req.body
+    let id = req.params.id
+    const updateUser = await userServices.update({ id }, body)
     res.json({
-      data:updateUser,
+      data: updateUser,
     })
   }
 
-async remove(req: Request, res: Response){
+
+
+  async updateDetails(req: Request, res: Response){
+    try {
+    const getOneDetails = await userServices.OneDetails({
+      id: req.params.id
+    })
+
+    if(getOneDetails){
+      const updateDetails = await userServices.updateDetails({
+        id: req.params.id
+      }, req.body)
+
+      res.json({
+        data: updateDetails
+      })
+        
+    } else {
+
+      const createDetails = await userServices.createDetails({
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        nickname: req.body.nickname,
+        zipcode: req.body.zipcode,
+        address: req.body.address,
+        phone: req.body.phone,
+      })
+
+      res.json({
+        data: createDetails
+      })
+    
+    } 
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar/crear los detalles', error: console.log(error)});
+    }
+  }
+
+
+    /*
+    const update_users_details = await userServices.updateDetails({
+      id: req.params.id
+    }, req.body)
+     */
+
+
+  async remove(req: Request, res: Response){
   const removeUser = await userServices.remove({
     id: req.params.id,
   });
