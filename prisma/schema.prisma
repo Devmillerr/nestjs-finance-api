@@ -74,11 +74,11 @@ model products {
 }
 
 model purchases {
-  id                 String               @id @default(uuid())
-  user               users                @relation(fields: [userId], references: [id])
-  userId             String
-  payment_method     payment_method_Types @default(Paypal)
-  payment_status     paymentTypes         @default(Not_Completed)
+  id             String               @id @default(uuid())
+  user           users                @relation(fields: [userId], references: [id])
+  userId         String
+  payment_method payment_method_Types @default(Paypal)
+  payment_status paymentTypes         @default(Not_Completed)
 
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt

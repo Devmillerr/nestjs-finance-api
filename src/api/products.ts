@@ -1,6 +1,7 @@
 import express from 'express';
 import { ProductController } from '../controllers/products.controller';
 import {validatorHandler} from '../middleware/validator.handler'
+import { PRODUCT_CREATE_SCHEMA } from '../utils/schema/product';
 import {ID_UUID} from '../utils/schema/general'
 
 const router = express.Router();

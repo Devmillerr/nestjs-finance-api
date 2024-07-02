@@ -60,23 +60,20 @@ export class UserController {
 
 
 
-  async updateDetails(req: Request, res: Response){
-    try {
+  async updateDetails(req: Request, res: Response) {
     const getOneDetails = await userServices.OneDetails({
       id: req.params.id
-    })
-
-    if(getOneDetails){
+    });
+  
+    if (getOneDetails) {
       const updateDetails = await userServices.updateDetails({
         id: req.params.id
-      }, req.body)
-
+      }, req.body);
+  
       res.json({
         data: updateDetails
-      })
-        
+      });
     } else {
-
       const createDetails = await userServices.createDetails({
         firstname: req.body.firstname,
         lastname: req.body.lastname,
@@ -84,19 +81,14 @@ export class UserController {
         zipcode: req.body.zipcode,
         address: req.body.address,
         phone: req.body.phone,
-      })
-
+      });
+  
       res.json({
         data: createDetails
-      })
-    
-    } 
-  } catch (error) {
-    res.status(500).json({ message: 'Error al actualizar/crear los detalles', error: console.log(error)});
+      });
     }
   }
-
-
+  
     /*
     const update_users_details = await userServices.updateDetails({
       id: req.params.id
