@@ -10,7 +10,7 @@ export class UserServices {
 
  getAll(where?: Prisma.usersWhereInput): Promise<users[]> {
   return db.users.findMany({
-    where
+    where,
   })
  }
 
@@ -30,20 +30,20 @@ export class UserServices {
   return db.users.update(
     {
       where,
-      data
+      data,
     }
   )
  }
 
  createDetails(data: Prisma.userDetailsCreateInput) {
   return db.userDetails.create({
-    data
+    data,
   })
  }
 
 OneDetails(where: Prisma.userDetailsWhereUniqueInput) {
   return db.userDetails.findUnique({
-    where
+    where,
   })
  }
 
@@ -53,7 +53,7 @@ OneDetails(where: Prisma.userDetailsWhereUniqueInput) {
   return db.userDetails.update(
     {
       where,
-      data
+      data,
     }
   )
  }

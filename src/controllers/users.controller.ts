@@ -1,7 +1,9 @@
 import { Response, Request } from 'express';
+import { PrismaClient } from '@prisma/client';
 import { UserServices } from '../services/database/users.services';
 const userServices = new UserServices();
 
+const prisma = new PrismaClient();
 
 export class UserController {
 
@@ -59,35 +61,55 @@ export class UserController {
   }
 
 
-
   async updateDetails(req: Request, res: Response) {
-    const getOneDetails = await userServices.OneDetails({
-      id: req.params.id
+    const userId = req.params.id;
+    const { firstname, lastname, nickname, zipcode, address, phone } = req.body;
+
+    const existingUserDetails = await prisma.userDetails.findUnique({
+      where: { id: userId },
     });
-  
-    if (getOneDetails) {
-      const updateDetails = await userServices.updateDetails({
-        id: req.params.id
-      }, req.body);
-  
-      res.json({
-        data: updateDetails
+
+    if (existingUserDetails) {
+      const updatedUserDetails = await prisma.userDetails.update({
+        where: { id: userId },
+        data: {
+          firstname,
+          lastname,
+          nickname,
+          zipcode,
+          address,
+          phone,
+        },
+        include: {
+          user: true,
+        },
       });
+
+      res.json(updatedUserDetails.user);
     } else {
-      const createDetails = await userServices.createDetails({
-        firstname: req.body.firstname,
-        lastname: req.body.lastname,
-        nickname: req.body.nickname,
-        zipcode: req.body.zipcode,
-        address: req.body.address,
-        phone: req.body.phone,
+      const createdUserDetails = await prisma.userDetails.create({
+        data: {
+          firstname,
+          lastname,
+          nickname,
+          zipcode,
+          address,
+          phone,
+          user: {
+            connect: { id: userId },
+          },
+        },
+        include: {
+          user: true,
+        },
       });
-  
-      res.json({
-        data: createDetails
-      });
+
+      res.json(createdUserDetails.user);
     }
   }
+  
+
+  
   
     /*
     const update_users_details = await userServices.updateDetails({
