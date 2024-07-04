@@ -12,8 +12,8 @@ router.get('/All', productController.getAll);
 router.get('/u/:id', validatorHandler(ID_UUID, 'params'), productController.getOne);
 
 // TODO para crear, actualizar y eliminar productos
-router.post('/', productController.create);
-router.put('/:id', productController.update);
+router.post('/', validatorHandler(PRODUCT_CREATE_SCHEMA, 'body'), productController.create);
+router.put('/:id',validatorHandler(ID_UUID, 'params'), productController.update);
 router.delete('/:id', productController.remove);
 
 export default router;
