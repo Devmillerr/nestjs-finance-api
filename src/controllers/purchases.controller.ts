@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
 import { PurchasesServices } from '../services/database/purchases.services';
+import {PrismaClient} from '@prisma/client'
+
+
+
+const prisma = new PrismaClient();
 
 
 const services = new PurchasesServices();
@@ -44,7 +49,8 @@ export class PurchasesController {
     });
   }
 
-  async remote(req: Request, res: Response) {
+
+  async removed(req: Request, res: Response) {
     const removePurchase = await services.remove({ id: req.params.id });
 
     res.json({

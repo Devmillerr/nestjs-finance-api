@@ -8,13 +8,13 @@ const router = express.Router();
 const userController = new UserController();
 
 router.get('/all', userController.getAll)
-router.get("/u/:id", validatorHandler(ID_UUID, 'params'), userController.getOne);
-router.get('/p/:id', userController.getPurchases)
-router.get('/b/:id', userController.getBudgets)
+router.get("/:id/u", validatorHandler(ID_UUID, 'params'), userController.getOne);
+router.get('/:id/p', validatorHandler(ID_UUID, 'params'), userController.getPurchases)
+router.get('/:id/g', validatorHandler(ID_UUID, 'params'), userController.getBudgets)
 
 router.post('/', validatorHandler(USER_CREATE_SCHEMA, 'body'), userController.create)
-router.put('/u/:id', validatorHandler(ID_UUID, 'params'), userController.update)
+router.put('/:id', validatorHandler(ID_UUID, 'params'), userController.update)
 router.put('/:id/details', validatorHandler(ID_UUID, 'params'), validatorHandler(USERDETAILS_CREATE_SCHEMA, 'body'), userController.updateDetails)
-router.delete('/:id', userController.remove)
+router.delete('/:id', validatorHandler(ID_UUID, 'params'), userController.remove)
 
 export default router;

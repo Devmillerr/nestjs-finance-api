@@ -36,4 +36,23 @@ export class BudgetServices {
       where,
     });
   }
+
+  createItem(data: Prisma.budget_productsCreateInput) {
+    return db.budget_products.create({
+      data
+    })
+  }
+  
+  updateItem(where: Prisma.budget_productsWhereUniqueInput, data: Prisma.budget_productsUpdateInput) {
+    return db.budget_products.update({
+      where,
+      data
+    })
+  }
+
+  remoteItem(where: Prisma.budget_productsWhereUniqueInput) {
+    return db.budget_products.delete({
+      where
+    })
+  }
 }

@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { purchases, Prisma } from "@prisma/client";
+import { purchases, Prisma, purchases_products } from "@prisma/client";
 
 export class PurchasesServices {
   create(data: Prisma.purchasesCreateInput): Promise<purchases> {
@@ -39,4 +39,6 @@ export class PurchasesServices {
       where,
     });
   }
+
+ 
 }

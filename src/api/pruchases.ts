@@ -7,15 +7,12 @@ import { PURCHASE_CREATE_ESCHEMA, PURCHASE_PRODUCT_CREATE_ESCHEMA } from '../uti
 const router = express.Router();
 const controller = new PurchasesController();
 
-// TODO Rutas para obtener 
-router.get('/All', controller.getall);
-router.get('/p/:id', validatorHandler(ID_UUID, 'params'), controller.getOne); 
+router.get('/all', controller.getall);
+router.get('/u/:id', validatorHandler(ID_UUID, 'params'), controller.getOne); 
 
-// TODO para crear, actualizar y eliminar compras
 router.post('/', validatorHandler(PURCHASE_CREATE_ESCHEMA, 'body'),validatorHandler(PURCHASE_PRODUCT_CREATE_ESCHEMA, 'body'), controller.create); 
 router.put('/:id', validatorHandler(ID_UUID, 'params'), controller.update); 
-//router.put('/id:/purchsesProducts', validatorHandler(ID_UUID, 'params'), validatorHandler(PURCHASE_PRODUCT_CREATE_ESCHEMA, 'body'), controller.updatePurchaseProduct);
-router.delete('/:id', controller.remote); 
+router.delete('/:id', validatorHandler(ID_UUID, 'params'), controller.removed); 
 
 export default router;
 

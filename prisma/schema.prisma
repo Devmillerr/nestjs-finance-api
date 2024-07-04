@@ -20,15 +20,16 @@ enum productTypes {
 }
 
 enum paymentTypes {
-  Completed
-  Pending
-  Not_Completed
+  COMPLETED
+  PENDING
+  NOT_COMPLETED
+  CANCELED
 }
 
 enum payment_method_Types {
-  Paypal
-  Stripe
-  Crypto
+  PAYPAL
+  STRIPE
+  CRYPTO
 }
 
 model users {
@@ -77,8 +78,8 @@ model purchases {
   id             String               @id @default(uuid())
   user           users                @relation(fields: [userId], references: [id])
   userId         String
-  payment_method payment_method_Types @default(Paypal)
-  payment_status paymentTypes         @default(Not_Completed)
+  payment_method payment_method_Types @default(PAYPAL)
+  payment_status paymentTypes         @default(NOT_COMPLETED)
 
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
@@ -98,9 +99,9 @@ model budgets {
   user            users                @relation(fields: [userId], references: [id])
   userId          String
   description     String
-  total           Float
-  payment_method  payment_method_Types @default(Paypal)
-  payment_status  paymentTypes         @default(Not_Completed)
+  total           Float?
+  payment_method  payment_method_Types @default(PAYPAL)
+  payment_status  paymentTypes         @default(NOT_COMPLETED)
   createdAT       DateTime             @default(now())
   updatedAT       DateTime             @updatedAt
   budget_products budget_products[]

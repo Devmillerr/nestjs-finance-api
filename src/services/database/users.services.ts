@@ -27,11 +27,7 @@ export class UserServices {
   where: Prisma.usersWhereUniqueInput,
   data: Prisma.usersUpdateInput
  ) {
-  return db.users.update(
-    {
-      where,
-      data,
-    }
+  return db.users.update({where,data,}
   )
  }
 
@@ -41,8 +37,8 @@ export class UserServices {
   })
  }
 
-OneDetails(where: Prisma.userDetailsWhereUniqueInput) {
-  return db.userDetails.findUnique({
+OneDetails(where: Prisma.userDetailsWhereInput) {
+  return db.userDetails.findFirst({
     where,
   })
  }
@@ -57,15 +53,12 @@ OneDetails(where: Prisma.userDetailsWhereUniqueInput) {
     }
   )
  }
- 
 
  remove(where: Prisma.usersWhereUniqueInput){
   return db.users.delete({
     where,
   })
  }
-
- //Ejemplos del jefecito modificados para que no me de error xd
 
  getPurchases(id: string): Promise<users | null> {
   return db.users.findFirst({
@@ -96,64 +89,3 @@ OneDetails(where: Prisma.userDetailsWhereUniqueInput) {
   })
  }
 }
-/*
-getPurchases(id: string): Promise<Users> {
-    return db.users.findFirst({
-      where: {
-        id,
-      },
-      include: {
-        purchases: {
-          include: {
-            purchases_products: true,
-          },
-        },
-      },
-    });
-  }
-
-  getBudgets(id: string): Promise<Users> {
-    return db.users.findFirst({
-      where: {
-        id,
-      },
-      include: {
-        budgets: {
-          include: {
-            budget_products: true,
-          },
-        },
-      },
-    });
-  }
-}
-
-create(): Promise<Users> {
-    return db.users.create({
-      data: {
-        email: "asdasdasd",
-        password: "asdasdasdasd",
-        userdetails: {
-          create: {
-            address: "mexico",
-            firstname: "kamerr",
-            lastname: "ezz",
-            nickname: "Kamerr Ezz",
-            phone: "8179248124",
-            zipcode: "35235",
-          },
-        },
-      },
-    });
-  }
-
-  getAll() {}
-
-  get(id: string) {
-    return db.users.findUnique({
-      where: { id },
-      include: {
-        userdetails: true,
-      },
-    });
-  }*/ 
