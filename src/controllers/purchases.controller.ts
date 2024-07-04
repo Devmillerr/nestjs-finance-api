@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PurchasesServices } from '../services/database/purchases.services';
 
+
 const services = new PurchasesServices();
 
 export class PurchasesController {

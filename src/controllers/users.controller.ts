@@ -1,6 +1,7 @@
 import { Response, Request } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { UserServices } from '../services/database/users.services';
+
 const userServices = new UserServices();
 
 const prisma = new PrismaClient();
