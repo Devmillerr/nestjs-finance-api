@@ -11,12 +11,8 @@ import {
 const router = express.Router()
 const budgetController = new BudgetController()
 
-router.get('/All', budgetController.getAll)
-router.get(
-  '/u/:id',
-  validatorHandler(ID_UUID, 'params'),
-  budgetController.getOne
-)
+router.get('/all', budgetController.getAll)
+router.get('/:id', validatorHandler(ID_UUID, 'params'), budgetController.getOne)
 
 router.post(
   '/',

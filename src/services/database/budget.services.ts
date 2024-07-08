@@ -17,6 +17,13 @@ export class BudgetServices {
   getOne(where: Prisma.budgetsWhereUniqueInput): Promise<budgets | null> {
     return db.budgets.findUnique({
       where,
+      include: {
+        budget_products: {
+          include: {
+            product: true,
+          },
+        },
+      },
     })
   }
 

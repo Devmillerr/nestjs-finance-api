@@ -10,7 +10,7 @@ export class BudgetController {
     })
 
     res.json({
-      budgets,
+      data: budgets,
     })
   }
 
@@ -20,7 +20,7 @@ export class BudgetController {
     })
 
     res.json({
-      budget,
+      data: budget,
     })
   }
 
@@ -45,7 +45,32 @@ export class BudgetController {
     const budget = await budgetServices.getOne({ id: budgetId })
     if (!budget) return next(boom.notFound())
 
-    const create = await budgetServices.createItem(req.body)
+    let schema: any = {
+      budget: {
+        connect: {
+          id: budget.id,
+        },
+      },
+    }
+
+    if (!req.body.productId)
+      schema = {
+        ...schema,
+        ...req.body,
+      }
+
+    if (req.body.productId)
+      schema = {
+        ...schema,
+        product: {
+          connect: {
+            id: req.body.productId,
+          },
+        },
+      }
+
+    const create = await budgetServices.createItem(schema)
+
     res.json({
       data: create,
     })

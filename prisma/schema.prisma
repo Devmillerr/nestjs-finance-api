@@ -111,9 +111,9 @@ model budget_products {
   id          String   @id @default(uuid())
   title       String?
   description String?  @db.Text
-  price       Float
+  price       Float? @default(0)
   budget      budgets  @relation(fields: [budgetId], references: [id])
-  product     products @relation(fields: [productId], references: [id])
+  product     products? @relation(fields: [productId], references: [id])
   budgetId    String
-  productId   String
+  productId   String?
 }

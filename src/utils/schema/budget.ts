@@ -20,6 +20,5 @@ export const BUDGET_PRODUCT_SCHEMA = Joi.object({
   title: Joi.string().optional(),
   description: Joi.string().optional(),
   price: Joi.number().optional(),
-  budgetId: Joi.string().uuid().required(),
   productId: Joi.string().uuid().optional(),
 })

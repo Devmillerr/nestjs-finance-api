@@ -16,7 +16,6 @@ router.get('/u/:id', validatorHandler(ID_UUID, 'params'), controller.getOne)
 router.post(
   '/',
   validatorHandler(PURCHASE_CREATE_ESCHEMA, 'body'),
-  validatorHandler(PURCHASE_PRODUCT_CREATE_ESCHEMA, 'body'),
   controller.create
 )
 router.put('/:id', validatorHandler(ID_UUID, 'params'), controller.update)

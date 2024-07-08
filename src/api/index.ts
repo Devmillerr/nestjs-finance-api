@@ -9,7 +9,7 @@ const router = express.Router()
 
 router.use('/users', users)
 router.use('/products', products)
-router.use('/budget', budgets)
+router.use('/budgets', budgets)
 router.use('/purchases', purchases)
 
 export default router
