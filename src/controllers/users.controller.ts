@@ -81,6 +81,14 @@ export class UserController {
       })
     } else {
       const dataUserDetails = await userServices.createDetails(req.body)
+      userServices.update(
+        { id: getUser?.id },
+        {
+          userdetails: {
+            connect: dataUserDetails,
+          },
+        }
+      )
 
       res.json({
         data: dataUserDetails,
