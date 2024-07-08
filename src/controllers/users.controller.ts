@@ -70,6 +70,8 @@ export class UserController {
     const userId = req.params.id
     const getUser = await userServices.getOne({ id: userId })
 
+    if (!getUser) return next(boom.notFound('User not found'))
+
     if (getUser && getUser.userdetailsId) {
       const dataUserDetails = await userServices.updateDetails(
         { id: getUser.userdetailsId },
