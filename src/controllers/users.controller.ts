@@ -83,7 +83,7 @@ export class UserController {
       })
     } else {
       const dataUserDetails = await userServices.createDetails(req.body)
-      userServices.update(
+      await userServices.update(
         { id: getUser?.id },
         {
           userdetails: {

@@ -8,7 +8,6 @@ export const validatorHandler = (
   return (req: Request, res: Response, next: NextFunction) => {
     const data = req[property]
     const { error } = schema.validate(data)
-    console.log(data, error)
 
     if (error) {
       next(boom.badRequest(error))
