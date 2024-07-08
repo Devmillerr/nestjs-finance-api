@@ -1,17 +1,17 @@
-import { db } from "../db";
-import { purchases, Prisma, purchases_products } from "@prisma/client";
+import { db } from '../db'
+import { purchases, Prisma, purchases_products } from '@prisma/client'
 
 export class PurchasesServices {
   create(data: Prisma.purchasesCreateInput): Promise<purchases> {
     return db.purchases.create({
       data,
-    });
+    })
   }
 
   getAll(where?: Prisma.purchasesWhereInput): Promise<purchases[]> {
     return db.purchases.findMany({
       where,
-    });
+    })
   }
 
   getOne(where: Prisma.purchasesWhereUniqueInput): Promise<purchases | null> {
@@ -21,24 +21,22 @@ export class PurchasesServices {
         purchases_products: true,
         user: true,
       },
-    });
+    })
   }
 
   update(
     where: Prisma.purchasesWhereUniqueInput,
-    data: Prisma.purchasesUpdateInput,
+    data: Prisma.purchasesUpdateInput
   ) {
     return db.purchases.update({
       where,
       data,
-    });
+    })
   }
 
   remove(where: Prisma.purchasesWhereUniqueInput) {
     return db.purchases.delete({
       where,
-    });
+    })
   }
-
- 
 }

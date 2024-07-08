@@ -1,12 +1,12 @@
 [
-    {
-        "ud_id": "1",
-        "user_id": "1",
-        "name": "miler",
-        "lastname": "castro",
-        "address": "chimbote",
-        "zipcode": "000",
-        "phone": "11111",
-        "nickname": "caramelo"
-    }
+  {
+    "ud_id": "1",
+    "user_id": "1",
+    "name": "miler",
+    "lastname": "castro",
+    "address": "chimbote",
+    "zipcode": "000",
+    "phone": "11111",
+    "nickname": "caramelo"
+  }
 ]

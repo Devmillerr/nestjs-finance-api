@@ -1,12 +1,12 @@
 [
-    {
-        "id": 1,
-        "ud_id": 1,
-        "name": "miler",
-        "lastname": "castro",
-        "address": "chimbote",
-        "zipcode": "000",
-        "phone": "11111",
-        "nickname": "caramelo"
-    }
+  {
+    "id": 1,
+    "ud_id": 1,
+    "name": "miler",
+    "lastname": "castro",
+    "address": "chimbote",
+    "zipcode": "000",
+    "phone": "11111",
+    "nickname": "caramelo"
+  }
 ]

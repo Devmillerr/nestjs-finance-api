@@ -5,19 +5,19 @@ export class ProductServices {
   create(data: Prisma.productsCreateInput): Promise<products> {
     return db.products.create({
       data,
-    });
+    })
   }
 
   getAll(where?: Prisma.productsWhereInput): Promise<products[]> {
     return db.products.findMany({
       where,
-    });
+    })
   }
 
   getOne(where: Prisma.productsWhereUniqueInput): Promise<products | null> {
     return db.products.findUnique({
       where,
-    });
+    })
   }
 
   update(
@@ -27,12 +27,12 @@ export class ProductServices {
     return db.products.update({
       data,
       where,
-    });
+    })
   }
 
   remove(where: Prisma.productsWhereUniqueInput): Promise<products> {
     return db.products.delete({
       where,
-    });
+    })
   }
 }

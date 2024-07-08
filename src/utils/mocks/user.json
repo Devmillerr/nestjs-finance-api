@@ -1,12 +1,12 @@
 [
-    {
-        "id": 1,
-        "email": "dev@kamerrezz.com",
-        "password": "aslkdnm1l2ke9182hd92nd&^*&@JBkjnawkdnaw",
-        "details": {
-            "name": "Kamerr",
-            "lastname": "Ezz",
-            "age": 23
-        }
+  {
+    "id": 1,
+    "email": "dev@kamerrezz.com",
+    "password": "aslkdnm1l2ke9182hd92nd&^*&@JBkjnawkdnaw",
+    "details": {
+      "name": "Kamerr",
+      "lastname": "Ezz",
+      "age": 23
     }
+  }
 ]
