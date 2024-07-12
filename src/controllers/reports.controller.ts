@@ -65,8 +65,15 @@ export class ReportsController {
       footer: '¡Gracias por su compra!',
     }
 
+    req.body.seller = {
+      name: 'Neenbyss',
+      address: 'billing@neenbyss.com',
+      phone: '',
+      email: '',
+    }
+
     try {
-      const invoice = printer.generateInvoicePDF(invoiceData as any)
+      const invoice = printer.generateInvoicePDF(req.body)
       const pdf = printer.createPDF(invoice)
 
       pdf.pipe(res)
