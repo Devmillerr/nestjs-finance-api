@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { users, Prisma, userDetails } from '@prisma/client'
+import { users, Prisma } from '@prisma/client'
 
 export class UserServices {
   create(data: Prisma.usersCreateInput): Promise<users> {
@@ -14,7 +14,7 @@ export class UserServices {
     })
   }
 
-  getOne(where: Prisma.usersWhereUniqueInput): Promise<users | null> {
+  getOne(where: Prisma.usersWhereUniqueInput) {
     return db.users.findUnique({
       where,
       include: {

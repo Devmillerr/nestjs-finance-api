@@ -6,6 +6,8 @@ import cors from 'cors'
 import * as middlewares from './middlewares'
 import api from './api'
 import MessageResponse from './interfaces/MessageResponse'
+import passport from 'passport'
+import session from 'express-session'
 
 require('dotenv').config()
 
@@ -15,6 +17,14 @@ app.use(morgan('dev'))
 app.use(helmet())
 app.use(cors())
 app.use(express.json())
+app.use(
+  session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: false,
+  })
+)
+app.use(passport.authenticate('session'))
 
 app.get<{}, MessageResponse>('/', (req, res) => {
   res.json({
