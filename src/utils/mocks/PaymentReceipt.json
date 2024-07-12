@@ -1,0 +1,8 @@
+{
+  "employeeName": "John Doe",
+  "employeeId": "EMP-001",
+  "paymentDate": "2024-07-12",
+  "amount": "500",
+  "paymentMethod": "Credit Card",
+  "additionalNotes": "Payment for services rendered."
+}

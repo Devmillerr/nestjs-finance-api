@@ -1,0 +1,34 @@
+{
+  "seller": {
+    "name": "Seller Company",
+    "code": "SEL-001"
+  },
+  "client": {
+    "name": "Client Company",
+    "code": "CLI-001"
+  },
+  "invoiceDetails": {
+    "paymentFormatNumber": "QUOTE-2024-001",
+    "issuedDate": "2024-07-12"
+  },
+  "items": [
+    {
+      "description": "Service A",
+      "price": 200
+    },
+    {
+      "description": "Service B",
+      "price": 300
+    }
+  ],
+  "totals": {
+    "subtotal": 500,
+    "additionalCharges": [],
+    "discounts": [],
+    "tax": 0,
+    "total": 500
+  },
+  "notes": "This quotation is valid for 30 days.",
+  "footer": "For any inquiries, please contact us.",
+  "details": "Includes detailed breakdown of services provided."
+}
