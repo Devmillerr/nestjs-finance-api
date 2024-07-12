@@ -1,0 +1,38 @@
+{
+  "client": {
+    "name": "Client Company",
+    "address": "456 Client Ave, City",
+    "phone": "+987654321",
+    "email": "client@example.com"
+  },
+  "invoiceDetails": {
+    "paymentFormatNumber": "INV-2024-001",
+    "issuedDate": "2024-07-12",
+    "dueDate": "2024-07-31",
+    "paymentMethod": "Bank Transfer"
+  },
+  "items": [
+    {
+      "description": "Item 1",
+      "price": 100
+    },
+    {
+      "description": "Item 2",
+      "price": 150
+    }
+  ],
+  "totals": {
+    "subtotal": 250,
+    "additionalCharges": [
+      {
+        "description": "Express Shipping",
+        "amount": 10
+      }
+    ],
+    "discounts": [],
+    "tax": 20,
+    "total": 280
+  },
+  "notes": "Please process this invoice at your earliest convenience.",
+  "footer": "Thank you for your business!"
+}
