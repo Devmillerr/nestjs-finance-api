@@ -1,7 +1,10 @@
 import { NextFunction, Request, Response } from 'express'
+import { permissionTypes, roleTypes, users } from '@prisma/client'
+
 import boom from '@hapi/boom'
 
 import ErrorResponse from './interfaces/ErrorResponse'
+import { db } from './services/db'
 
 export function notFound(req: Request, res: Response, next: NextFunction) {
   res.status(404)
@@ -29,12 +32,46 @@ export function errorHandler(
   }
 }
 
-// TODO: verificar si es admin
-export const isAdmin = () => {
-  return () => {}
+interface AuthenticatedRequest extends Request {
+  user?: users
 }
 
-// TODO: validar permisos
-export const isPerms = (perms: string[]) => {
-  return () => {}
+export const hasPermission = ({
+  userId,
+  permissionName,
+  role,
+}: {
+  userId: string
+  permissionName: permissionTypes
+  role?: roleTypes
+  two?: boolean
+}) => {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (role && req.user?.role !== role) {
+        throw boom.unauthorized()
+      }
+
+      if (permissionName) {
+        const perms = await db.user_permissions.findFirst({
+          where: {
+            userId,
+            permission: { name: permissionName },
+          },
+        })
+
+        if (!perms) {
+          throw boom.unauthorized()
+        }
+      }
+
+      next()
+    } catch (error) {
+      next(error)
+    }
+  }
 }
