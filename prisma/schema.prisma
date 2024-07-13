@@ -32,13 +32,6 @@ enum payment_method_Types {
   CRYPTO
 }
 
-enum roleTypes {
-  USER
-  TEAM
-  ADMIN
-  OWN
-}
-
 enum permissionTypes {
   CREATE_USER
   READ_USER
@@ -71,18 +64,41 @@ enum permissionTypes {
   ALL_PERMISSION
 }
 
+enum statusTypes {
+  ACTIVE
+  INACTIVE
+  PENDING
+  COMPLETED
+  CANCELED
+}
+
+enum roleTypes {
+  USER
+  TEAM
+  ADMIN
+  OWN
+}
+
+enum chargesTypes {
+  DISCOUNT
+  OTHER
+  TAX
+}
+
 model users {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String    @id @default(uuid())
+  email     String    @unique
   password  String
-  createdAt DateTime @default(now())
-  role      roleTypes     @default(USER)
+  createdAt DateTime  @default(now())
+  role      roleTypes @default(USER)
 
   userdetails      userDetails?       @relation(references: [id], fields: [userdetailsId])
   userdetailsId    String?            @unique
   purchases        purchases[]
   budgets          budgets[]
   user_permissions user_permissions[]
+  services_worke   services_worke[]
+  invoices         invoices[]
 
   @@index([email])
 }
@@ -113,12 +129,13 @@ model products {
   updatedAT          DateTime             @updatedAt
   purchases_products purchases_products[]
   budget_products    budget_products[]
+  invoices_products  invoices_products[]
 }
 
 model purchases {
   id             String               @id @default(uuid())
-  user           users                @relation(fields: [userId], references: [id])
-  userId         String
+  client         users                @relation(fields: [clientId], references: [id])
+  clientId       String
   payment_method payment_method_Types @default(PAYPAL)
   payment_status paymentTypes         @default(NOT_COMPLETED)
 
@@ -128,23 +145,63 @@ model purchases {
 }
 
 model purchases_products {
-  id         String    @id @default(uuid())
-  pruchase   purchases @relation(references: [id], fields: [purchaseId])
-  product    products  @relation(references: [id], fields: [productId])
-  purchaseId String
-  productId  String
+  id         String  @id @default(uuid())
+  purchaseId String?
+  productId  String?
+
+  pruchase purchases? @relation(references: [id], fields: [purchaseId])
+  product  products?  @relation(references: [id], fields: [productId])
+}
+
+model invoices {
+  id                  String               @id @default(uuid())
+  client              users                @relation(fields: [clientId], references: [id])
+  clientId            String
+  payment_method      payment_method_Types @default(PAYPAL)
+  payment_status      paymentTypes         @default(NOT_COMPLETED)
+  payment_transaccion String               @db.Text
+
+  expiration DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  invoices_products invoices_products[]
+  invoices_charges  invoices_charges[]
+}
+
+model invoices_charges {
+  id         String       @id @default(uuid())
+  type       chargesTypes @default(OTHER)
+  amount     Float
+  invoicesId String
+  invoices   invoices     @relation(references: [id], fields: [invoicesId])
+}
+
+model invoices_products {
+  id String @id @default(uuid())
+
+  name        String?
+  description String?
+  price       Float?
+
+  invoicesId        String?
+  productId         String?
+  serviceId         String?
+  servicecontractId String?
+
+  product         products?          @relation(references: [id], fields: [productId])
+  service         services?          @relation(references: [id], fields: [serviceId])
+  servicecontract service_contracts? @relation(references: [id], fields: [servicecontractId])
+  invoices        invoices?          @relation(fields: [invoicesId], references: [id])
 }
 
 model budgets {
-  id              String               @id @default(uuid())
-  user            users                @relation(fields: [userId], references: [id])
-  userId          String
+  id              String            @id @default(uuid())
+  client          users             @relation(fields: [clientId], references: [id])
+  clientId        String
   description     String
-  total           Float?
-  payment_method  payment_method_Types @default(PAYPAL)
-  payment_status  paymentTypes         @default(NOT_COMPLETED)
-  createdAT       DateTime             @default(now())
-  updatedAT       DateTime             @updatedAt
+  createdAT       DateTime          @default(now())
+  updatedAT       DateTime          @updatedAt
   budget_products budget_products[]
 }
 
@@ -172,4 +229,50 @@ model user_permissions {
   userId       String
   permission   permissions @relation(fields: [permissionId], references: [id])
   permissionId String
+}
+
+// services
+model services {
+  id          String @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  photo       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  service_contracts service_contracts[]
+  invoices_products invoices_products[]
+}
+
+model service_contracts {
+  id        String  @id @default(uuid())
+  serviceId String?
+  clientId  String
+
+  name        String?
+  description String? @db.Text
+  price       Float?
+  notes       String? @db.Text
+
+  status     statusTypes @default(PENDING)
+  start_date DateTime
+  end_date   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  service           services?           @relation(references: [id], fields: [clientId])
+  services_worke    services_worke[]
+  invoices_products invoices_products[]
+}
+
+model services_worke {
+  id                String @id @default(uuid())
+  servicecontractId String
+  teamId            String
+
+  servicecontract service_contracts @relation(references: [id], fields: [servicecontractId])
+  team            users             @relation(references: [id], fields: [teamId])
 }
