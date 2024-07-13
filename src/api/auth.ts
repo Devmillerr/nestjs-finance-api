@@ -7,7 +7,10 @@ import { registrationSchema } from '../utils/schema/auth'
 const router = express.Router()
 const controller = new AuthController()
 
-router.post('/login', passport.authenticate('local'))
+router.get('/status', controller.status)
+router.post('/login', passport.authenticate('local'), (req, res) =>
+  res.send(req?.user)
+)
 router.post(
   '/register',
   validatorHandler(registrationSchema, 'body'),

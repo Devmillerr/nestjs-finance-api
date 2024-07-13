@@ -2,6 +2,7 @@ import express from 'express'
 import morgan from 'morgan'
 import helmet from 'helmet'
 import cors from 'cors'
+import cookieParse from 'cookie-parser'
 
 import * as middlewares from './middlewares'
 import api from './api'
@@ -17,20 +18,16 @@ app.use(morgan('dev'))
 app.use(helmet())
 app.use(cors())
 app.use(express.json())
+app.use(cookieParse('12neenbyss90'))
 app.use(
   session({
     secret: 'keyboard cat',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
   })
 )
-app.use(passport.authenticate('session'))
-
-app.get<{}, MessageResponse>('/', (req, res) => {
-  res.json({
-    message: '¡Hola Mundo! 🦄🌈✨👋🌎🌍🌏✨🌈🦄',
-  })
-})
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.use('/api/v1', api)
 
