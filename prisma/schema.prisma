@@ -32,16 +32,57 @@ enum payment_method_Types {
   CRYPTO
 }
 
+enum role {
+  USER
+  TEAM
+  ADMIN
+  OWN
+}
+
+enum permissionTypes {
+  CREATE_USER
+  READ_USER
+  UPDATE_USER
+  DELETE_USER
+  READ_USER_DETAILS
+  UPDATE_USER_DETAILS
+  CREATE_PRODUCT
+  READ_PRODUCT
+  UPDATE_PRODUCT
+  DELETE_PRODUCT
+  CREATE_PURCHASE
+  READ_PURCHASE
+  UPDATE_PURCHASE
+  DELETE_PURCHASE
+  CREATE_INVOICE
+  READ_INVOICE
+  UPDATE_INVOICE
+  DELETE_INVOICE
+  CREATE_BUDGET
+  READ_BUDGET
+  UPDATE_BUDGET
+  DELETE_BUDGET
+  READ_ADMIN_PANEL
+  UPDATE_SETTINGS
+  VIEW_REPORTS
+  EXPORT_DATA
+  ASSIGN_ROLE
+  VIEW_ACTIVITY_LOG
+  ALL_PERMISSION
+}
+
 model users {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+  role      role     @default(USER)
 
-  userdetails   userDetails? @relation(references: [id], fields: [userdetailsId])
-  userdetailsId String?      @unique
-  purchases     purchases[]
-  budgets       budgets[]
+  userdetails      userDetails?       @relation(references: [id], fields: [userdetailsId])
+  userdetailsId    String?            @unique
+  purchases        purchases[]
+  budgets          budgets[]
+  user_permissions user_permissions[]
 
   @@index([email])
 }
@@ -108,12 +149,27 @@ model budgets {
 }
 
 model budget_products {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String?
-  description String?  @db.Text
-  price       Float? @default(0)
-  budget      budgets  @relation(fields: [budgetId], references: [id])
+  description String?   @db.Text
+  price       Float?    @default(0)
+  budget      budgets   @relation(fields: [budgetId], references: [id])
   product     products? @relation(fields: [productId], references: [id])
   budgetId    String
   productId   String?
+}
+
+model permissions {
+  id               String             @id @default(uuid())
+  name             permissionTypes    @unique
+  description      String?
+  user_permissions user_permissions[]
+}
+
+model user_permissions {
+  id           String      @id @default(uuid())
+  user         users       @relation(fields: [userId], references: [id])
+  userId       String
+  permission   permissions @relation(fields: [permissionId], references: [id])
+  permissionId String
 }
