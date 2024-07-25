@@ -9,7 +9,7 @@ const services = new PurchasesServices()
 export class PurchasesController {
   async getall(req: Request, res: Response) {
     const purchases = await services.getAll({
-      userId: req.params.id,
+      clientId: req.params.id,
     })
 
     res.json({

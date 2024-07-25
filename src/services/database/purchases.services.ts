@@ -19,7 +19,7 @@ export class PurchasesServices {
       where,
       include: {
         purchases_products: true,
-        user: true,
+        client: true,
       },
     })
   }
