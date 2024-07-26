@@ -43,5 +43,7 @@ export class ServicesServices {
     return db.service_contracts.update({ where, data })
   }
 
-  // TODO: terminarlo
+  removeContract(where: Prisma.service_contractsWhereUniqueInput) {
+    return db.service_contracts.delete({ where })
+  }
 }
