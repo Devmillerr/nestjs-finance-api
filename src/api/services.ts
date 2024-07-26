@@ -6,7 +6,7 @@ import {
   SERVICE_UPDATE_SCHEMA,
   CONTRACT_CREATE_SCHEMA,
   CONTRACT_UPDATE_SCHEMA,
-} from '../utils/schema/services' // Asegúrate de definir y exportar estos esquemas en tu archivo de esquemas
+} from '../utils/schema/services'
 import { ID_UUID } from '../utils/schema/general'
 
 const router = Router()

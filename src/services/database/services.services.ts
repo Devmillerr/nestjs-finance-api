@@ -24,7 +24,6 @@ export class ServicesServices {
   createContract(data: Prisma.service_contractsCreateArgs) {
     return db.service_contracts.create(data)
   }
-
   getOneContract(
     where: Prisma.service_contractsWhereInput,
     include: Prisma.servicesInclude
@@ -45,5 +44,30 @@ export class ServicesServices {
 
   removeContract(where: Prisma.service_contractsWhereUniqueInput) {
     return db.service_contracts.delete({ where })
+  }
+
+  createWorke(data: Prisma.services_workeCreateArgs) {
+    return db.services_worke.create(data)
+  }
+  getOneWorke(
+    where: Prisma.services_workeWhereInput,
+    include: Prisma.services_workeInclude
+  ) {
+    return db.services_worke.findFirst({ where, include })
+  }
+
+  getAllWorke() {
+    return db.services_worke.findMany()
+  }
+
+  updateWorke(
+    where: Prisma.services_workeWhereUniqueInput,
+    data: Prisma.services_workeUpdateInput
+  ) {
+    return db.services_worke.update({ where, data })
+  }
+
+  removeWorke(where: Prisma.services_workeWhereUniqueInput) {
+    return db.services_worke.delete({ where })
   }
 }
