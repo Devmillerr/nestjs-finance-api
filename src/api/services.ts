@@ -3,9 +3,7 @@ import { ServicesController } from '../controllers/services.controller'
 import { validatorHandler } from '../middleware/validator.handler'
 import {
   SERVICE_CREATE_SCHEMA,
-  SERVICE_UPDATE_SCHEMA,
   CONTRACT_CREATE_SCHEMA,
-  CONTRACT_UPDATE_SCHEMA,
 } from '../utils/schema/services'
 import { ID_UUID } from '../utils/schema/general'
 
@@ -27,7 +25,7 @@ router.post(
 )
 router.put(
   '/services/:id',
-  validatorHandler(SERVICE_UPDATE_SCHEMA, 'body'),
+  validatorHandler(SERVICE_CREATE_SCHEMA, 'body'),
   validatorHandler(ID_UUID, 'params'),
   servicesController.update
 )
@@ -38,7 +36,7 @@ router.delete(
 )
 
 // NOTE Rutas para contratos de servicios
-router.get('/contracts', servicesController.getAllContracts)
+router.get('/services/c/all', servicesController.getAllContracts)
 router.get('/contracts/:id', servicesController.getOneContract)
 router.post(
   '/contracts',
@@ -47,7 +45,7 @@ router.post(
 )
 router.put(
   '/contracts/:id',
-  validatorHandler(CONTRACT_UPDATE_SCHEMA, 'body'),
+  validatorHandler(CONTRACT_CREATE_SCHEMA, 'body'),
   validatorHandler(ID_UUID, 'params'),
   servicesController.updateContracts
 )

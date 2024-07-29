@@ -2,8 +2,8 @@ import { db } from '../db'
 import { Prisma } from '@prisma/client'
 
 export class ServicesServices {
-  create(data: Prisma.servicesCreateArgs) {
-    return db.services.create(data)
+  async create(data: Prisma.servicesCreateInput) {
+    return db.services.create({ data })
   }
   getOne(where: Prisma.servicesWhereInput, include: Prisma.servicesInclude) {
     return db.services.findFirst({ where, include })
@@ -21,9 +21,12 @@ export class ServicesServices {
     return db.services.delete({ where })
   }
 
-  createContract(data: Prisma.service_contractsCreateArgs) {
-    return db.service_contracts.create(data)
+  createContract(data: Prisma.service_contractsCreateInput) {
+    return db.service_contracts.create({
+      data: data,
+    })
   }
+
   getOneContract(
     where: Prisma.service_contractsWhereInput,
     include: Prisma.servicesInclude

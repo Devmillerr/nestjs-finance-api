@@ -1,7 +1,6 @@
 import { Response, Request, NextFunction } from 'express'
 import boom from '@hapi/boom'
 import { ServicesServices } from '../services/database/services.services'
-import request from 'supertest'
 
 const servicesServices = new ServicesServices()
 
@@ -42,6 +41,7 @@ export class ServicesController {
     const updateService = await servicesServices.update(req.body, {
       id: req.params.id,
     })
+
     res.json({
       data: updateService,
     })
