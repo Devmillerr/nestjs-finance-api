@@ -263,7 +263,7 @@ model service_contracts {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  service           services?           @relation(references: [id], fields: [clientId])
+  service           services?           @relation(references: [id], fields: [serviceId])
   services_worke    services_worke[]
   invoices_products invoices_products[]
 }

@@ -95,4 +95,59 @@ export class ServicesController {
       data: removeContract,
     })
   }
+
+  async createWorke(req: Request, res: Response) {
+    const newWorke = await servicesServices.createWorke(req.body)
+
+    res.json({
+      data: newWorke,
+    })
+  }
+
+  async AllWorke(req: Request, res: Response) {
+    const allWorkes = await servicesServices.getAllWorke()
+
+    res.json({
+      data: allWorkes,
+    })
+  }
+
+  async getOneWorke(req: Request, res: Response, next: NextFunction) {
+    const id = req.params.id
+
+    if (!id) {
+      return next(boom.badRequest('El parámetro id es requerido'))
+    }
+
+    const include = {}
+    const getWorke = await servicesServices.getOneWorke({ id }, include)
+
+    if (!getWorke) {
+      return next(boom.notFound('Servicio no encontrado'))
+    }
+
+    res.json({
+      data: getWorke,
+    })
+  }
+
+  async updateWorkes(req: Request, res: Response) {
+    const updateWorks = await servicesServices.updateWorke(req.body, {
+      id: req.params.id,
+    })
+
+    res.json({
+      data: updateWorks,
+    })
+  }
+
+  async removeWorke(req: Request, res: Response) {
+    const removeWorkes = await servicesServices.removeWorke({
+      id: req.params.id,
+    })
+
+    res.json({
+      data: removeWorkes,
+    })
+  }
 }
