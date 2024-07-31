@@ -4,13 +4,13 @@ import { validatorHandler } from '../middleware/validator.handler'
 import {
   SERVICE_CREATE_SCHEMA,
   CONTRACT_CREATE_SCHEMA,
+  WORKE_CREATE_SCHEMA,
 } from '../utils/schema/services'
 import { ID_UUID } from '../utils/schema/general'
 
 const router = Router()
 const servicesController = new ServicesController()
 
-//NOTE Rutas para servicios
 router.get('/all', servicesController.getAll)
 router.get(
   '/:id',
@@ -24,19 +24,18 @@ router.post(
   servicesController.create
 )
 router.put(
-  '/services/:id',
+  '/:id',
   validatorHandler(SERVICE_CREATE_SCHEMA, 'body'),
   validatorHandler(ID_UUID, 'params'),
   servicesController.update
 )
 router.delete(
-  '/services/:id',
+  '/:id',
   validatorHandler(ID_UUID, 'params'),
   servicesController.remove
 )
 
-// NOTE Rutas para contratos de servicios
-router.get('/services/c/all', servicesController.getAllContracts)
+router.get('/contracts/all', servicesController.getAllContracts)
 router.get('/contracts/:id', servicesController.getOneContract)
 router.post(
   '/contracts',
@@ -49,9 +48,23 @@ router.put(
   validatorHandler(ID_UUID, 'params'),
   servicesController.updateContracts
 )
-router.delete(
-  '/contracts/:id',
-  servicesController.removeContracts.bind(servicesController)
+router.delete('/contracts/:id', servicesController.removeContracts)
+
+router.get('/worke/all', servicesController.getAllWorke)
+router.get('/worke/:id', servicesController.getOneWorke)
+
+router.post(
+  '/workes',
+  validatorHandler(WORKE_CREATE_SCHEMA, 'body'),
+  servicesController.createWorke
 )
+router.put(
+  '/worke/:id',
+  validatorHandler(WORKE_CREATE_SCHEMA, 'body'),
+  validatorHandler(ID_UUID, 'params'),
+  servicesController.updateWorke
+)
+
+router.delete('/workes/:id', servicesController.removeWorke)
 
 export default router

@@ -49,8 +49,8 @@ export class ServicesServices {
     return db.service_contracts.delete({ where })
   }
 
-  createWorke(data: Prisma.services_workeCreateArgs) {
-    return db.services_worke.create(data)
+  createWorke(data: Prisma.services_workeCreateInput) {
+    return db.services_worke.create({ data })
   }
   getOneWorke(
     where: Prisma.services_workeWhereInput,

@@ -8,11 +8,16 @@ export const SERVICE_CREATE_SCHEMA = Joi.object({
 })
 
 export const CONTRACT_CREATE_SCHEMA = Joi.object({
-  serviceId: Joi.string().uuid().required(), // Asumiendo que `serviceId` es un UUID
-  clientId: Joi.string().uuid().required(), // Asumiendo que `clientId` es un UUID
+  serviceId: Joi.string().uuid().required(),
+  clientId: Joi.string().uuid().required(),
   name: Joi.string().optional(),
   description: Joi.string().optional(),
   price: Joi.number().optional(),
-  start_date: Joi.date().iso().required(), // Validación para formato ISO-8601
-  end_date: Joi.date().iso().optional(), // Opcional, si está presente, debe ser ISO-8601
+  start_date: Joi.date().iso().required(),
+  end_date: Joi.date().iso().optional(),
+})
+
+export const WORKE_CREATE_SCHEMA = Joi.object({
+  servicecontractId: Joi.string().uuid().required(),
+  teamId: Joi.string().uuid().required(),
 })

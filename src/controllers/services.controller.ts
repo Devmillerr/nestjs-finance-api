@@ -104,7 +104,7 @@ export class ServicesController {
     })
   }
 
-  async AllWorke(req: Request, res: Response) {
+  async getAllWorke(req: Request, res: Response) {
     const allWorkes = await servicesServices.getAllWorke()
 
     res.json({
@@ -131,7 +131,7 @@ export class ServicesController {
     })
   }
 
-  async updateWorkes(req: Request, res: Response) {
+  async updateWorke(req: Request, res: Response) {
     const updateWorks = await servicesServices.updateWorke(req.body, {
       id: req.params.id,
     })
