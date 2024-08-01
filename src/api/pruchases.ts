@@ -2,10 +2,7 @@ import express from 'express'
 import { PurchasesController } from '../controllers/purchases.controller'
 import { validatorHandler } from '../middleware/validator.handler'
 import { ID_UUID } from '../utils/schema/general'
-import {
-  PURCHASE_CREATE_ESCHEMA,
-  PURCHASE_PRODUCT_CREATE_ESCHEMA,
-} from '../utils/schema/purchase'
+import { PURCHASE_CREATE_ESCHEMA } from '../utils/schema/purchase'
 
 const router = express.Router()
 const controller = new PurchasesController()
