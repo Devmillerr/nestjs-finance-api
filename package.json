@@ -1,0 +1,15 @@
+{
+  "name": "financeapi-v3",
+  "private": true,
+  "version": "1.0.0",
+  "description": "FinanceApi V3 - Monorepo (API + Web)",
+  "scripts": {
+    "dev:api": "pnpm --filter @financeapi/api start:dev",
+    "build:api": "pnpm --filter @financeapi/api build",
+    "test:api": "pnpm --filter @financeapi/api test",
+    "lint": "pnpm -r lint"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

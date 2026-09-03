@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinanceApi — Login: 4 conceptos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; font-family:'Inter',sans-serif; }
+  .switcher {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; gap: 2px; padding: 10px; background: #1a1a1a;
+  }
+  .switcher button {
+    flex: 1; padding: 12px 8px; border: none; border-radius: 6px;
+    background: #2a2a2a; color: #999; font-family: 'Inter'; font-size: 12.5px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .switcher button.active { background: #fff; color: #111; }
+  .panel { display: none; min-height: 100vh; }
+  .panel.active { display: block; }
+
+  /* ============ 1. EXECUTIVE LEDGER ============ */
+  .p1 { display: grid; grid-template-columns: 58% 42%; min-height: 100vh; background: #fff; }
+  .p1-left {
+    background: #0B1F1C; color: #ECF2F0; position: relative; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: space-between; padding: 48px;
+  }
+  .p1-ledger { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px; opacity: 0.5; }
+  .p1-row { display: flex; justify-content: space-between; font-family: 'IBM Plex Mono'; font-size: 11.5px; padding: 5px 0; border-bottom: 1px solid rgba(236,242,240,0.06); color: #9BB0AB; }
+  .p1-stat-label { font-size: 12.5px; color: #6f8a83; margin-bottom: 6px; }
+  .p1-stat { font-family: 'IBM Plex Mono'; font-size: 42px; font-weight: 500; letter-spacing: -0.02em; }
+  .p1-brand { display: flex; align-items: center; gap: 10px; }
+  .p1-mark { width: 30px; height: 30px; background: #2FA88F; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#06201B; }
+  .p1-right { display: flex; align-items: center; padding: 48px; }
+  .p1-form { width: 100%; max-width: 320px; }
+  .p1-form h1 { font-size: 22px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .p1-form p { font-size: 13.5px; color: #6b7c78; margin: 0 0 28px; }
+  .field { margin-bottom: 14px; }
+  .field label { display:block; font-size: 12.5px; font-weight: 500; margin-bottom: 6px; color: #333; }
+  .field input { width: 100%; height: 42px; border: 1px solid #E4E8E6; border-radius: 8px; padding: 0 13px; font-size: 14px; font-family: 'Inter'; outline: none; transition: border-color .12s ease, box-shadow .12s ease; }
+  .field input:focus { border-color: #0E6B5C; box-shadow: 0 0 0 3px rgba(14,107,92,0.12); }
+  .btn1 { width: 100%; height: 44px; background: #0E6B5C; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 8px; transition: transform .1s cubic-bezier(.23,1,.32,1), background .12s ease; }
+  .btn1:active { transform: scale(0.97); }
+  .btn1:hover { background: #0A5548; }
+
+  /* ============ 2. MINIMAL EDITORIAL ============ */
+  .p2 { min-height: 100vh; background: #FBFAF8; padding: 8vh 0 0 12vw; }
+  .p2-wrap { max-width: 380px; }
+  .p2-brand { font-size: 13px; color: #8a8a85; margin-bottom: 60px; letter-spacing: 0.01em; }
+  .p2 h1 { font-family: 'Fraunces', serif; font-size: 44px; font-weight: 500; line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 42px; color: #1a1a17; }
+  .p2-field { margin-bottom: 30px; position: relative; }
+  .p2-field input {
+    width: 100%; border: none; border-bottom: 1.5px solid #ddd9d0; background: transparent;
+    padding: 8px 0; font-size: 16px; font-family: 'Inter'; outline: none; color: #1a1a17;
+    transition: border-color .15s ease;
+  }
+  .p2-field input:focus { border-color: #0E6B5C; }
+  .p2-field label {
+    position: absolute; left: 0; top: 10px; font-size: 15px; color: #a19d92;
+    pointer-events: none; transition: all .18s cubic-bezier(.23,1,.32,1);
+  }
+  .p2-field.filled label, .p2-field.on label { top: -14px; font-size: 12px; color: #0E6B5C; }
+  .btn2 { border: none; background: #1a1a17; color: #FBFAF8; height: 46px; padding: 0 30px; border-radius: 3px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 12px; transition: transform .1s cubic-bezier(.23,1,.32,1), background .12s ease; }
+  .btn2:active { transform: scale(0.97); }
+  .btn2:hover { background: #333; }
+  .p2-foot { margin-top: 50px; font-size: 13px; color: #a19d92; }
+  .p2-foot a { color: #1a1a17; text-decoration: underline; }
+
+  /* ============ 3. PREMIUM DARK / CONSOLE ============ */
+  .p3 { min-height: 100vh; background: #081714; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .p3::before {
+    content: ''; position: absolute; top: 38%; left: 50%; transform: translate(-50%,-50%);
+    width: 420px; height: 420px; background: radial-gradient(circle, rgba(47,168,143,0.16) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .p3-wrap { position: relative; width: 100%; max-width: 340px; padding: 0 24px; }
+  .p3-status { font-family: 'IBM Plex Mono'; font-size: 10.5px; color: #4a6b62; letter-spacing: 0.04em; margin-bottom: 36px; display:flex; justify-content: space-between; }
+  .p3-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; }
+  .p3-mark { width: 32px; height: 32px; border: 1px solid #2FA88F; border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#2FA88F; font-family:'IBM Plex Mono'; }
+  .p3-brand span { color: #ECF2F0; font-size: 15px; font-weight: 600; }
+  .p3-field { margin-bottom: 22px; }
+  .p3-field label { display:block; font-family:'IBM Plex Mono'; font-size: 10.5px; color: #5a7a71; margin-bottom: 8px; letter-spacing: 0.03em; }
+  .p3-field input {
+    width: 100%; background: transparent; border: none; border-bottom: 1px solid #1e3b34;
+    color: #ECF2F0; font-size: 14.5px; font-family: 'IBM Plex Mono'; padding: 6px 0; outline: none;
+    transition: border-color .15s ease;
+  }
+  .p3-field input:focus { border-color: #2FA88F; }
+  .btn3 {
+    width: 100%; height: 44px; background: transparent; border: 1px solid #2FA88F; color: #2FA88F;
+    border-radius: 4px; font-size: 13.5px; font-family: 'IBM Plex Mono'; cursor: pointer; margin-top: 10px;
+    transition: all .12s ease;
+  }
+  .btn3:hover { background: #2FA88F; color: #06201B; }
+  .btn3:active { transform: scale(0.97); }
+
+  /* ============ 4. SOFT LUXURY ============ */
+  .p4 {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: #F5F1EC; position: relative; overflow: hidden;
+  }
+  .p4::before {
+    content:''; position:absolute; width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(14,107,92,0.10) 0%, transparent 70%);
+    top: -120px; right: -100px; filter: blur(10px);
+  }
+  .p4-card {
+    position: relative; background: #FFFDF9; border-radius: 28px; padding: 52px 44px;
+    width: 100%; max-width: 380px; box-shadow: 0 30px 60px -20px rgba(60,50,30,0.12);
+  }
+  .p4-mark { width: 40px; height: 40px; background: #0E6B5C; border-radius: 14px; margin-bottom: 26px; }
+  .p4-card h1 { font-size: 24px; font-weight: 600; margin: 0 0 6px; color: #2a2620; letter-spacing: -0.01em; }
+  .p4-card p { font-size: 14px; color: #8a8478; margin: 0 0 30px; line-height: 1.5; }
+  .p4-field { margin-bottom: 16px; }
+  .p4-field label { display:block; font-size: 12.5px; font-weight: 500; margin-bottom: 7px; color: #4a453c; }
+  .p4-field input {
+    width: 100%; height: 50px; border: none; border-radius: 25px; padding: 0 20px;
+    font-size: 14px; font-family: 'Inter'; outline: none; background: #F5F1EC;
+    box-shadow: inset 0 1px 3px rgba(60,50,30,0.06);
+    transition: box-shadow .15s ease;
+  }
+  .p4-field input:focus { box-shadow: inset 0 1px 3px rgba(60,50,30,0.06), 0 0 0 4px rgba(14,107,92,0.14); }
+  .btn4 {
+    width: 100%; height: 50px; background: #0E6B5C; color: #fff; border: none; border-radius: 25px;
+    font-size: 14.5px; font-weight: 500; cursor: pointer; margin-top: 10px;
+    box-shadow: 0 8px 20px -6px rgba(14,107,92,0.45);
+    transition: transform .1s cubic-bezier(.23,1,.32,1), box-shadow .12s ease;
+  }
+  .btn4:active { transform: scale(0.97); }
+  .btn4:hover { box-shadow: 0 10px 24px -6px rgba(14,107,92,0.55); }
+
+  @media (max-width: 720px) {
+    .p1 { grid-template-columns: 1fr; }
+    .p1-left { padding: 28px; min-height: 30vh; }
+    .p1-ledger { display: none; }
+    .p1-right { padding: 28px; }
+    .p2 { padding: 8vh 24px 0; }
+    .p2 h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="active" onclick="show(0,this)">1 · Executive Ledger</button>
+  <button onclick="show(1,this)">2 · Minimal Editorial</button>
+  <button onclick="show(2,this)">3 · Premium Dark / Console</button>
+  <button onclick="show(3,this)">4 · Soft Luxury</button>
+</div>
+
+<!-- 1. EXECUTIVE LEDGER -->
+<div class="panel active" id="panel0">
+  <div class="p1">
+    <div class="p1-left">
+      <div class="p1-brand"><div class="p1-mark">Fx</div></div>
+      <div class="p1-ledger" id="ledger">
+        <div class="p1-row"><span>PUR-2026-0091</span><span>$1,240.00</span></div>
+        <div class="p1-row"><span>INV-2026-0143</span><span>$680.00</span></div>
+        <div class="p1-row"><span>PUR-2026-0090</span><span>$2,150.00</span></div>
+        <div class="p1-row"><span>SVC-2026-0022</span><span>$340.00</span></div>
+      </div>
+      <div>
+        <div class="p1-stat-label">Procesado este mes</div>
+        <div class="p1-stat">$482,940</div>
+      </div>
+    </div>
+    <div class="p1-right">
+      <div class="p1-form">
+        <h1>Bienvenido de nuevo</h1>
+        <p>Iniciá sesión para continuar</p>
+        <div class="field"><label>Email</label><input type="email" placeholder="tu@empresa.com" /></div>
+        <div class="field"><label>Contraseña</label><input type="password" /></div>
+        <button class="btn1">Ingresar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. MINIMAL EDITORIAL -->
+<div class="panel" id="panel1">
+  <div class="p2">
+    <div class="p2-wrap">
+      <div class="p2-brand">FinanceApi</div>
+      <h1>Iniciar<br/>sesión.</h1>
+      <div class="p2-field on"><label>Email</label><input type="email" value="tu@empresa.com" /></div>
+      <div class="p2-field"><label>Contraseña</label><input type="password" /></div>
+      <button class="btn2">Continuar</button>
+      <div class="p2-foot">¿No tenés cuenta? <a href="#">Registrate</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. PREMIUM DARK / CONSOLE -->
+<div class="panel" id="panel2">
+  <div class="p3">
+    <div class="p3-wrap">
+      <div class="p3-status"><span>FINANCEAPI</span><span>SESIÓN SEGURA</span></div>
+      <div class="p3-brand"><div class="p3-mark">Fx</div><span>FinanceApi</span></div>
+      <div class="p3-field"><label>EMAIL</label><input type="email" placeholder="tu@empresa.com" /></div>
+      <div class="p3-field"><label>CONTRASEÑA</label><input type="password" /></div>
+      <button class="btn3">Iniciar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. SOFT LUXURY -->
+<div class="panel" id="panel3">
+  <div class="p4">
+    <div class="p4-card">
+      <div class="p4-mark"></div>
+      <h1>Hola de nuevo</h1>
+      <p>Ingresá tus datos para acceder a tu cuenta.</p>
+      <div class="p4-field"><label>Email</label><input type="email" placeholder="tu@empresa.com" /></div>
+      <div class="p4-field"><label>Contraseña</label><input type="password" /></div>
+      <button class="btn4">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function show(i, btn) {
+    document.querySelectorAll('.panel').forEach((p,idx) => p.classList.toggle('active', idx===i));
+    document.querySelectorAll('.switcher button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
