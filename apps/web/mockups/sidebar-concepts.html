@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinanceApi — Sidebar: 4 conceptos</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; font-family:'Inter',sans-serif; background:#F3F5F4; color:#0B1F1C; }
+  :root {
+    --ink:#0B1F1C; --ink-soft:rgba(11,31,28,.62); --ink-faint:rgba(11,31,28,.42);
+    --paper:#F3F5F4; --surface:#fff; --line:rgba(11,31,28,.09); --line-strong:rgba(11,31,28,.16);
+    --primary:#0E6B5C; --primary-soft:#E3F2ED;
+  }
+  .switcher { position: sticky; top:0; z-index:200; display:flex; gap:2px; padding:10px; background:#1a1a1a; }
+  .switcher button { flex:1; padding:11px 8px; border:none; border-radius:6px; background:#2a2a2a; color:#999; font-size:12px; font-weight:500; cursor:pointer; }
+  .switcher button.active { background:#fff; color:#111; }
+  .panel { display:none; }
+  .panel.active { display:flex; min-height:calc(100vh - 48px); }
+  .content { flex:1; min-width:0; }
+  .topbar { display:flex; align-items:center; gap:12px; padding:14px 24px; background:var(--surface); border-bottom:1px solid var(--line); }
+  .topbar h1 { font-size:16px; font-weight:600; margin:0; }
+  .stub-table { margin:20px 24px; background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .stub-row { display:flex; padding:12px 18px; border-bottom:1px solid var(--line); font-size:13px; color:var(--ink-soft); }
+  .stub-row:last-child{border-bottom:none;}
+  .stub-row span:first-child { flex:1; }
+  .badge { font-size:10.5px; background:var(--primary-soft); color:var(--primary); padding:1px 7px; border-radius:20px; margin-left:6px; }
+
+  /* ============ 1. COMMAND RAIL ============ */
+  .rail1 { width:64px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:4px; }
+  .rail1-logo { width:32px; height:32px; background:var(--primary); border-radius:9px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-size:12px; margin-bottom:18px; }
+  .rail1-item { position:relative; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:9px; color:var(--ink-faint); cursor:pointer; }
+  .rail1-item:hover { background:var(--paper); color:var(--ink); }
+  .rail1-item:hover .tip { opacity:1; transform:translateX(0); }
+  .rail1-item.active { color:var(--primary); }
+  .rail1-item.active::before { content:''; position:absolute; left:-12px; top:50%; transform:translateY(-50%); width:3px; height:16px; background:var(--primary); border-radius:2px; }
+  .tip { position:absolute; left:52px; top:50%; transform:translateY(-50%) translateX(-4px); background:var(--ink); color:#fff; font-size:12px; padding:5px 10px; border-radius:6px; white-space:nowrap; opacity:0; pointer-events:none; transition:all .12s ease; z-index:10; }
+  .rail1-div { width:24px; height:1px; background:var(--line); margin:10px 0; }
+  .rail1-cmdk { margin-top:auto; width:40px; height:40px; border:1px dashed var(--line-strong); border-radius:9px; display:flex; align-items:center; justify-content:center; color:var(--ink-faint); font-family:'IBM Plex Mono'; font-size:10px; cursor:pointer; }
+  .rail1-avatar { width:30px; height:30px; border-radius:50%; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; margin-top:10px; }
+
+  /* ============ 2. GROUPED WORKSPACE ============ */
+  .rail2 { width:272px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line); padding:18px 14px; }
+  .rail2-brand { display:flex; align-items:center; gap:9px; padding:0 6px 20px; }
+  .rail2-mark { width:26px; height:26px; background:var(--primary); border-radius:7px; }
+  .rail2-brand span { font-weight:600; font-size:14px; }
+  .rail2-group { margin-bottom:2px; }
+  .rail2-ghead { display:flex; align-items:center; gap:6px; padding:6px; font-size:11.5px; color:var(--ink-faint); font-weight:500; cursor:pointer; }
+  .rail2-ghead i { font-size:13px; transition:transform .15s ease; }
+  .rail2-item { display:flex; align-items:center; gap:10px; padding:7px 10px 7px 26px; border-radius:7px; font-size:13px; color:var(--ink-soft); cursor:pointer; }
+  .rail2-item:hover { background:var(--paper); }
+  .rail2-item.active { background:var(--primary-soft); color:var(--primary); font-weight:500; }
+  .rail2-item span:first-of-type { flex:1; }
+
+  /* ============ 3. TOP RAIL ============ */
+  .panel3-full { flex-direction:column; width:100%; }
+  .toprail-1 { display:flex; align-items:center; gap:14px; padding:12px 24px; border-bottom:1px solid var(--line); background:var(--surface); }
+  .toprail-mark { width:28px; height:28px; background:var(--primary); border-radius:8px; }
+  .toprail-1 span.b { font-weight:600; font-size:14px; margin-right:auto; }
+  .toprail-2 { display:flex; gap:4px; padding:0 20px; background:var(--surface); border-bottom:1px solid var(--line); overflow-x:auto; }
+  .toprail-tab { padding:12px 14px; font-size:13px; color:var(--ink-faint); border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; }
+  .toprail-tab.active { color:var(--ink); border-color:var(--primary); font-weight:500; }
+
+  /* ============ 4. CONTEXTUAL DOCK ============ */
+  .panel4-bg { background:#EAEDEB; padding:14px; width:100%; display:flex; gap:14px; }
+  .rail4 { width:220px; flex-shrink:0; background:var(--surface); border-radius:18px; box-shadow:0 8px 24px -8px rgba(11,31,28,.12); padding:16px 12px; height:fit-content; align-self:flex-start; }
+  .rail4-brand { display:flex; align-items:center; gap:9px; padding:2px 6px 18px; }
+  .rail4-mark { width:26px; height:26px; background:var(--primary); border-radius:8px; }
+  .rail4-brand span { font-weight:600; font-size:14px; }
+  .rail4-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:11px; font-size:13px; color:var(--ink-soft); cursor:pointer; margin-bottom:2px; }
+  .rail4-item:hover { background:var(--paper); }
+  .rail4-item.active { background:var(--primary); color:#fff; }
+  .panel4-content { flex:1; background:var(--surface); border-radius:18px; box-shadow:0 8px 24px -8px rgba(11,31,28,.12); overflow:hidden; }
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="active" onclick="show(0,this)">1 · Command Rail</button>
+  <button onclick="show(1,this)">2 · Grouped Workspace</button>
+  <button onclick="show(2,this)">3 · Top Rail</button>
+  <button onclick="show(3,this)">4 · Contextual Dock</button>
+</div>
+
+<!-- 1. COMMAND RAIL -->
+<div class="panel active" id="panel0">
+  <div class="rail1">
+    <div class="rail1-logo">Fx</div>
+    <div class="rail1-item active"><i class="ti ti-layout-dashboard"></i><span class="tip">Dashboard</span></div>
+    <div class="rail1-div"></div>
+    <div class="rail1-item"><i class="ti ti-shopping-cart"></i><span class="tip">Compras</span></div>
+    <div class="rail1-item"><i class="ti ti-file-invoice"></i><span class="tip">Facturas</span></div>
+    <div class="rail1-item"><i class="ti ti-clipboard-list"></i><span class="tip">Presupuestos</span></div>
+    <div class="rail1-item"><i class="ti ti-briefcase"></i><span class="tip">Servicios</span></div>
+    <div class="rail1-div"></div>
+    <div class="rail1-item"><i class="ti ti-users"></i><span class="tip">Usuarios</span></div>
+    <div class="rail1-cmdk">⌘K</div>
+    <div class="rail1-avatar">PR</div>
+  </div>
+  <div class="content">
+    <div class="topbar"><h1>Dashboard</h1></div>
+    <div class="stub-table">
+      <div class="stub-row"><span>02 set. 2026</span><span>USD 20.00</span></div>
+      <div class="stub-row"><span>01 set. 2026</span><span>USD 340.00</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. GROUPED WORKSPACE -->
+<div class="panel" id="panel1">
+  <div class="rail2">
+    <div class="rail2-brand"><div class="rail2-mark"></div><span>FinanceApi</span></div>
+    <div class="rail2-group">
+      <div class="rail2-ghead"><i class="ti ti-chevron-down"></i>General</div>
+      <div class="rail2-item active"><i class="ti ti-layout-dashboard"></i><span>Dashboard</span></div>
+    </div>
+    <div class="rail2-group">
+      <div class="rail2-ghead"><i class="ti ti-chevron-down"></i>Finanzas</div>
+      <div class="rail2-item"><i class="ti ti-shopping-cart"></i><span>Compras</span></div>
+      <div class="rail2-item"><i class="ti ti-file-invoice"></i><span>Facturas</span><span class="badge">3</span></div>
+      <div class="rail2-item"><i class="ti ti-clipboard-list"></i><span>Presupuestos</span></div>
+      <div class="rail2-item"><i class="ti ti-briefcase"></i><span>Servicios</span></div>
+    </div>
+    <div class="rail2-group">
+      <div class="rail2-ghead"><i class="ti ti-chevron-down"></i>Gestión</div>
+      <div class="rail2-item"><i class="ti ti-users"></i><span>Usuarios</span></div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="topbar"><h1>Dashboard</h1></div>
+    <div class="stub-table">
+      <div class="stub-row"><span>02 set. 2026</span><span>USD 20.00</span></div>
+      <div class="stub-row"><span>01 set. 2026</span><span>USD 340.00</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. TOP RAIL -->
+<div class="panel panel3-full" id="panel2">
+  <div class="toprail-1">
+    <div class="toprail-mark"></div>
+    <span class="b">FinanceApi</span>
+    <i class="ti ti-search" style="color:var(--ink-faint)"></i>
+    <div style="width:28px;height:28px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">PR</div>
+  </div>
+  <div class="toprail-2">
+    <div class="toprail-tab active">Dashboard</div>
+    <div class="toprail-tab">Compras</div>
+    <div class="toprail-tab">Facturas</div>
+    <div class="toprail-tab">Presupuestos</div>
+    <div class="toprail-tab">Servicios</div>
+    <div class="toprail-tab">Usuarios</div>
+  </div>
+  <div class="stub-table">
+    <div class="stub-row"><span>Cliente</span><span>Estado</span><span style="flex:0 0 100px; text-align:right;">Total</span></div>
+    <div class="stub-row"><span>02 set. 2026</span><span>No completado</span><span style="flex:0 0 100px; text-align:right;">USD 20.00</span></div>
+  </div>
+</div>
+
+<!-- 4. CONTEXTUAL DOCK -->
+<div class="panel" id="panel3">
+  <div class="panel4-bg">
+    <div class="rail4">
+      <div class="rail4-brand"><div class="rail4-mark"></div><span>FinanceApi</span></div>
+      <div class="rail4-item active"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
+      <div class="rail4-item"><i class="ti ti-shopping-cart"></i>Compras</div>
+      <div class="rail4-item"><i class="ti ti-file-invoice"></i>Facturas</div>
+      <div class="rail4-item"><i class="ti ti-clipboard-list"></i>Presupuestos</div>
+      <div class="rail4-item"><i class="ti ti-briefcase"></i>Servicios</div>
+      <div class="rail4-item"><i class="ti ti-users"></i>Usuarios</div>
+    </div>
+    <div class="panel4-content">
+      <div class="topbar"><h1>Dashboard</h1></div>
+      <div class="stub-table" style="margin:20px;">
+        <div class="stub-row"><span>02 set. 2026</span><span>USD 20.00</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function show(i, btn) {
+    document.querySelectorAll('.panel').forEach((p,idx) => p.classList.toggle('active', idx===i));
+    document.querySelectorAll('.switcher button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

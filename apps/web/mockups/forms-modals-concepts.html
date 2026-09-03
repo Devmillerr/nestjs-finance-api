@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinanceApi — Formularios y Modales: 3 conceptos</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; font-family:'Inter',sans-serif; background:#F3F5F4; color:#0B1F1C; }
+  :root {
+    --ink:#0B1F1C; --ink-soft:rgba(11,31,28,.62); --ink-faint:rgba(11,31,28,.42);
+    --paper:#F3F5F4; --surface:#fff; --line:rgba(11,31,28,.09); --line-strong:rgba(11,31,28,.16);
+    --primary:#0E6B5C; --primary-soft:#E3F2ED; --red:#B0473F; --red-soft:#FBEBE9; --amber:#A6791E; --amber-soft:#FBF1DE;
+  }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .switcher { position: sticky; top:0; z-index:200; display:flex; gap:2px; padding:10px; background:#1a1a1a; }
+  .switcher button { flex:1; padding:11px 8px; border:none; border-radius:6px; background:#2a2a2a; color:#999; font-size:12px; font-weight:500; cursor:pointer; }
+  .switcher button.active { background:#fff; color:#111; }
+  .panel { display:none; padding: 32px; }
+  .panel.active { display:flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; justify-content: center; }
+  .col-label { font-size:11px; color:var(--ink-faint); text-transform:none; margin-bottom:10px; font-weight:500; }
+  .block { width: 380px; }
+
+  /* ===== 1. LEDGER ENTRY ===== */
+  .l1-form { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:26px; }
+  .l1-form h2 { font-size:16px; font-weight:600; margin:0 0 20px; }
+  .l1-field { margin-bottom:20px; }
+  .l1-field label { display:block; font-size:11px; font-family:'IBM Plex Mono'; color:var(--ink-faint); margin-bottom:6px; letter-spacing:.02em; }
+  .l1-field select, .l1-field input { width:100%; border:none; border-bottom:1px solid var(--line-strong); background:transparent; padding:6px 0; font-size:14px; font-family:'Inter'; outline:none; }
+  .l1-line { display:flex; gap:14px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .l1-line select { flex:1; border:none; background:transparent; font-size:13.5px; outline:none; }
+  .l1-line input { width:50px; border:none; background:transparent; font-size:13.5px; font-family:'IBM Plex Mono'; text-align:right; outline:none; }
+  .l1-total { display:flex; justify-content:space-between; padding-top:14px; font-family:'IBM Plex Mono'; font-size:15px; font-weight:500; }
+  .l1-btn { width:100%; height:42px; margin-top:20px; background:var(--ink); color:#fff; border:none; border-radius:6px; font-size:13.5px; cursor:pointer; }
+
+  .l1-modal { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:24px; width:300px; }
+  .l1-modal .tag { font-family:'IBM Plex Mono'; font-size:10px; color:var(--red); letter-spacing:.04em; margin-bottom:10px; }
+  .l1-modal h3 { font-size:15px; font-weight:600; margin:0 0 8px; }
+  .l1-modal p { font-size:13px; color:var(--ink-soft); margin:0 0 20px; line-height:1.5;}
+  .l1-modal .row { display:flex; gap:8px; border-top:1px solid var(--line); padding-top:16px; }
+  .l1-modal button { flex:1; height:36px; border-radius:6px; font-size:13px; cursor:pointer; }
+  .l1-modal .cancel { border:1px solid var(--line-strong); background:none; }
+  .l1-modal .danger { border:none; background:var(--red); color:#fff; }
+
+  /* ===== 2. STRUCTURED FORM PANEL ===== */
+  .l2-form { background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .l2-section { padding:20px 22px; border-bottom:1px solid var(--line); }
+  .l2-section:last-child { border-bottom:none; }
+  .l2-section h4 { font-size:11.5px; font-weight:600; color:var(--ink-soft); margin:0 0 14px; }
+  .l2-row { display:flex; gap:12px; margin-bottom:12px; }
+  .l2-field { flex:1; }
+  .l2-field label { display:block; font-size:12px; font-weight:500; margin-bottom:5px; }
+  .l2-field input, .l2-field select { width:100%; height:36px; border:1px solid var(--line-strong); border-radius:7px; padding:0 10px; font-size:13.5px; outline:none; }
+  .l2-toggle { display:flex; border:1px solid var(--line-strong); border-radius:8px; overflow:hidden; margin-bottom:12px; }
+  .l2-toggle button { flex:1; padding:9px; border:none; background:var(--surface); font-size:12.5px; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; }
+  .l2-toggle button.active { background:var(--primary-soft); color:var(--primary); font-weight:500; }
+  .l2-footer { padding:16px 22px; display:flex; justify-content:flex-end; gap:10px; background:var(--paper); }
+  .l2-btn { height:36px; padding:0 18px; border-radius:7px; font-size:13px; cursor:pointer; }
+  .l2-btn.primary { border:none; background:var(--primary); color:#fff; }
+  .l2-btn.ghost { border:1px solid var(--line-strong); background:none; }
+
+  .l2-modal { background:var(--surface); border-radius:14px; padding:24px; width:320px; box-shadow:0 20px 50px -12px rgba(11,31,28,.2); }
+  .l2-modal .icon { width:40px; height:40px; border-radius:10px; background:var(--red-soft); color:var(--red); display:flex; align-items:center; justify-content:center; margin-bottom:14px; font-size:18px; }
+  .l2-modal h3 { font-size:15.5px; font-weight:600; margin:0 0 6px; }
+  .l2-modal p { font-size:13px; color:var(--ink-soft); margin:0 0 20px; }
+  .l2-modal .row { display:flex; gap:8px; }
+  .l2-modal button { flex:1; height:38px; border-radius:8px; font-size:13px; cursor:pointer; }
+  .l2-modal .cancel { border:1px solid var(--line-strong); background:none; }
+  .l2-modal .danger { border:none; background:var(--red); color:#fff; font-weight:500; }
+
+  /* ===== 3. INLINE COMMAND FORM ===== */
+  .l3-wrap { position:relative; width: 760px; height: 460px; background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .l3-list { padding:20px; opacity:.35; filter: blur(1px); }
+  .l3-list-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .l3-dim { position:absolute; inset:0; background:rgba(11,31,28,.06); }
+  .l3-panel { position:absolute; top:0; right:0; bottom:0; width:320px; background:var(--surface); border-left:1px solid var(--line); box-shadow:-16px 0 40px -20px rgba(11,31,28,.25); padding:24px; display:flex; flex-direction:column; }
+  .l3-panel h3 { font-size:15px; font-weight:600; margin:0 0 20px; }
+  .l3-panel label { display:block; font-size:11px; font-family:'IBM Plex Mono'; color:var(--ink-faint); margin-bottom:6px; }
+  .l3-panel input, .l3-panel select { width:100%; border:none; border-bottom:1px solid var(--line-strong); background:transparent; padding:6px 0 10px; font-size:13.5px; outline:none; margin-bottom:16px; }
+  .l3-hint { margin-top:auto; display:flex; justify-content:space-between; font-size:11px; color:var(--ink-faint); font-family:'IBM Plex Mono'; padding-top:14px; border-top:1px solid var(--line); }
+  .l3-hint kbd { border:1px solid var(--line-strong); border-radius:3px; padding:0 4px; }
+
+  .l3-confirm { position:absolute; left:24px; right:24px; bottom:24px; background:var(--red-soft); border-radius:8px; padding:12px 14px; display:flex; align-items:center; gap:10px; }
+  .l3-confirm span { flex:1; font-size:12.5px; color:var(--red); }
+  .l3-confirm button { border:none; background:var(--red); color:#fff; font-size:12px; padding:6px 12px; border-radius:6px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="active" onclick="show(0,this)">1 · Ledger Entry</button>
+  <button onclick="show(1,this)">2 · Structured Form Panel</button>
+  <button onclick="show(2,this)">3 · Inline Command Form</button>
+</div>
+
+<!-- 1. LEDGER ENTRY -->
+<div class="panel active" id="p0">
+  <div class="block">
+    <div class="col-label">Formulario — Nueva compra</div>
+    <div class="l1-form">
+      <h2>Nueva compra</h2>
+      <div class="l1-field"><label>MÉTODO DE PAGO</label><select><option>PayPal</option></select></div>
+      <div class="l1-line"><select><option>Landing page — $50.00</option></select><input value="1" /></div>
+      <div class="l1-line"><select><option>Hosting anual — $120.00</option></select><input value="2" /></div>
+      <div class="l1-total"><span>Total estimado</span><span>$170.00</span></div>
+      <button class="l1-btn">Crear compra</button>
+    </div>
+  </div>
+  <div class="block">
+    <div class="col-label">Modal — Confirmar eliminación</div>
+    <div class="l1-modal">
+      <div class="tag">ACCIÓN IRREVERSIBLE</div>
+      <h3>Eliminar presupuesto</h3>
+      <p>Esta acción no se puede deshacer. El presupuesto y sus líneas se van a borrar de forma permanente.</p>
+      <div class="row"><button class="cancel">Cancelar</button><button class="danger">Eliminar</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. STRUCTURED FORM PANEL -->
+<div class="panel" id="p1">
+  <div class="block">
+    <div class="col-label">Formulario — Nueva factura</div>
+    <div class="l2-form">
+      <div class="l2-section">
+        <h4>Detalles</h4>
+        <div class="l2-row">
+          <div class="l2-field"><label>Cliente</label><select><option>ana@empresa.com</option></select></div>
+          <div class="l2-field"><label>Vence</label><input type="date" /></div>
+        </div>
+      </div>
+      <div class="l2-section">
+        <h4>Línea de factura</h4>
+        <div class="l2-toggle">
+          <button class="active"><i class="ti ti-package"></i> Del catálogo</button>
+          <button><i class="ti ti-edit"></i> Ítem libre</button>
+        </div>
+        <div class="l2-field"><select><option>Landing page — $50.00</option></select></div>
+      </div>
+      <div class="l2-footer">
+        <button class="l2-btn ghost">Cancelar</button>
+        <button class="l2-btn primary">Emitir factura</button>
+      </div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="col-label">Modal — Confirmar eliminación</div>
+    <div class="l2-modal">
+      <div class="icon"><i class="ti ti-alert-triangle"></i></div>
+      <h3>¿Eliminar este servicio?</h3>
+      <p>Se va a quitar del catálogo permanentemente. No afecta a contratos ya emitidos.</p>
+      <div class="row"><button class="cancel">Cancelar</button><button class="danger">Sí, eliminar</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. INLINE COMMAND FORM -->
+<div class="panel" id="p2">
+  <div>
+    <div class="col-label">Alta — panel deslizante sobre la lista (con confirmación inline)</div>
+    <div class="l3-wrap">
+      <div class="l3-list">
+        <div class="l3-list-row"><span>02 set. 2026</span><span>$20.00</span></div>
+        <div class="l3-list-row"><span>28 ago. 2026</span><span>$340.00</span></div>
+        <div class="l3-list-row"><span>25 ago. 2026</span><span>$1,240.00</span></div>
+      </div>
+      <div class="l3-dim"></div>
+      <div class="l3-panel">
+        <h3>Nueva compra</h3>
+        <label>MÉTODO DE PAGO</label>
+        <select><option>PayPal</option></select>
+        <label>PRODUCTO</label>
+        <select><option>Landing page — $50.00</option></select>
+        <label>CANTIDAD</label>
+        <input value="1" />
+        <div class="l3-hint"><span><kbd>Enter</kbd> guardar</span><span>cancelar <kbd>Esc</kbd></span></div>
+      </div>
+      <div class="l3-confirm">
+        <span>¿Eliminar esta línea?</span>
+        <button>Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function show(i, btn) {
+    document.querySelectorAll('.panel').forEach((p,idx) => p.classList.toggle('active', idx===i));
+    document.querySelectorAll('.switcher button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>

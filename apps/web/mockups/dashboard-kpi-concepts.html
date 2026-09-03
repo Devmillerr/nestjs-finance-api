@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinanceApi — Dashboard: 3 alternativas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; font-family:'Inter',sans-serif; background:#F3F5F4; color:#0B1F1C; }
+  :root {
+    --ink:#0B1F1C; --ink-soft:rgba(11,31,28,.62); --ink-faint:rgba(11,31,28,.42);
+    --paper:#F3F5F4; --surface:#fff; --line:rgba(11,31,28,.09); --line-strong:rgba(11,31,28,.16);
+    --primary:#0E6B5C; --primary-soft:#E3F2ED; --green:#1C8A5B; --red:#B0473F;
+  }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .switcher { position: sticky; top:0; z-index:200; display:flex; gap:2px; padding:10px; background:#1a1a1a; }
+  .switcher button { flex:1; padding:11px 8px; border:none; border-radius:6px; background:#2a2a2a; color:#999; font-size:12px; font-weight:500; cursor:pointer; }
+  .switcher button.active { background:#fff; color:#111; }
+  .panel { display:none; padding: 28px 40px; max-width: 980px; margin: 0 auto; }
+  .panel.active { display:block; }
+  .ph { margin-bottom: 22px; }
+  .ph h1 { font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .ph p { font-size: 13px; color: var(--ink-faint); margin: 3px 0 0; }
+
+  /* ===== A. LEDGER SHEET ===== */
+  .a-strip { display:flex; margin-bottom: 26px; border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--line); }
+  .a-metric { flex:1; padding: 14px 20px; border-left: 1px solid var(--line); }
+  .a-metric:first-child { border-left: none; }
+  .a-metric-label { font-size: 11.5px; color: var(--ink-faint); margin-bottom: 6px; }
+  .a-metric-value { font-family:'IBM Plex Mono'; font-size: 22px; font-weight: 500; }
+  .a-metric-delta { font-size: 11.5px; margin-top: 4px; color: var(--green); }
+  .a-metric-delta.down { color: var(--red); }
+  .a-table { width:100%; border-collapse: collapse; }
+  .a-table thead th { text-align:left; font-size:11px; color:var(--ink-faint); font-weight:500; padding: 8px 14px; border-bottom: 1.5px solid var(--ink); }
+  .a-table thead th.num { text-align:right; border-left: 1px solid var(--line-strong); }
+  .a-table td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid var(--line); }
+  .a-table td.num { text-align:right; font-family:'IBM Plex Mono'; border-left: 1px solid var(--line); }
+  .badge { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; }
+  .badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .badge.ok { color: var(--green); } .badge.pending { color:#A6791E; }
+
+  /* ===== B. FOLIO CARDS REFINADAS ===== */
+  .b-grid { display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap:12px; margin-bottom:22px; }
+  .b-card { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px; }
+  .b-card.primary { display:flex; flex-direction:column; justify-content:space-between; }
+  .b-label { font-size:12px; color:var(--ink-faint); margin-bottom:8px; }
+  .b-value { font-family:'IBM Plex Mono'; font-weight:500; }
+  .b-card.primary .b-value { font-size:30px; }
+  .b-card:not(.primary) .b-value { font-size:19px; }
+  .b-spark { margin-top:10px; }
+  .b-delta { font-size:11.5px; color:var(--green); margin-top:6px; }
+  .b-table-wrap { background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .b-thead { display:flex; padding:10px 16px; background:var(--paper); font-size:11px; color:var(--ink-faint); font-weight:500; }
+  .b-row { display:flex; align-items:center; padding:11px 16px; border-top:1px solid var(--line); font-size:13px; }
+  .b-row > span:first-child { flex:1; }
+  .b-row .amt { font-family:'IBM Plex Mono'; }
+
+  /* ===== C. MARGINALIA (header fusionado, tabla como hero) ===== */
+  .c-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px; flex-wrap:wrap; gap:8px; }
+  .c-head h1 { font-size:19px; font-weight:600; margin:0; }
+  .c-meta { font-size:13px; color:var(--ink-soft); }
+  .c-meta b { font-family:'IBM Plex Mono'; color:var(--ink); font-weight:500; }
+  .c-meta .up { color:var(--green); }
+  .c-chart { height:52px; margin: 16px 0 22px; }
+  .c-table { width:100%; border-collapse:collapse; }
+  .c-table thead th { text-align:left; font-size:11px; color:var(--ink-faint); font-weight:500; padding:9px 4px; border-bottom:1px solid var(--line-strong); }
+  .c-table thead th.num { text-align:right; }
+  .c-table td { padding:12px 4px; font-size:13.5px; border-bottom:1px solid var(--line); }
+  .c-table td.num { text-align:right; font-family:'IBM Plex Mono'; }
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <button class="active" onclick="show(0,this)">A · Ledger Sheet</button>
+  <button onclick="show(1,this)">B · Folio Cards (jerarquía)</button>
+  <button onclick="show(2,this)">C · Marginalia (tabla-hero)</button>
+</div>
+
+<!-- A. LEDGER SHEET -->
+<div class="panel active" id="p0">
+  <div class="ph"><h1>Dashboard</h1><p>Resumen general</p></div>
+  <div class="a-strip">
+    <div class="a-metric"><div class="a-metric-label">Compras totales</div><div class="a-metric-value">1</div></div>
+    <div class="a-metric"><div class="a-metric-label">Facturas totales</div><div class="a-metric-value">0</div></div>
+    <div class="a-metric"><div class="a-metric-label">Presupuestos activos</div><div class="a-metric-value">3</div></div>
+  </div>
+  <table class="a-table">
+    <thead><tr><th>Fecha</th><th>Estado</th><th class="num">Monto</th></tr></thead>
+    <tbody>
+      <tr><td>02 set. 2026</td><td><span class="badge pending">No completado</span></td><td class="num">$20.00</td></tr>
+      <tr><td>28 ago. 2026</td><td><span class="badge ok">Completado</span></td><td class="num">$340.00</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- B. FOLIO CARDS -->
+<div class="panel" id="p1">
+  <div class="ph"><h1>Dashboard</h1><p>Resumen general</p></div>
+  <div class="b-grid">
+    <div class="b-card primary">
+      <div class="b-label">Compras totales</div>
+      <div>
+        <div class="b-value">1</div>
+        <svg class="b-spark" width="70" height="24" viewBox="0 0 70 24"><polyline points="0,20 15,16 30,18 45,10 60,12 70,4" fill="none" stroke="#0E6B5C" stroke-width="2"/></svg>
+        <div class="b-delta">↑ actividad reciente</div>
+      </div>
+    </div>
+    <div class="b-card"><div class="b-label">Facturas totales</div><div class="b-value">0</div></div>
+    <div class="b-card"><div class="b-label">Presupuestos activos</div><div class="b-value">3</div></div>
+  </div>
+  <div class="b-table-wrap">
+    <div class="b-thead"><span style="flex:1">Fecha</span><span style="flex:1">Estado</span><span>Monto</span></div>
+    <div class="b-row"><span>02 set. 2026</span><span style="flex:1"><span class="badge pending">No completado</span></span><span class="amt">$20.00</span></div>
+    <div class="b-row"><span>28 ago. 2026</span><span style="flex:1"><span class="badge ok">Completado</span></span><span class="amt">$340.00</span></div>
+  </div>
+</div>
+
+<!-- C. MARGINALIA -->
+<div class="panel" id="p2">
+  <div class="c-head">
+    <h1>Dashboard</h1>
+    <div class="c-meta"><b>1</b> compra · <b>0</b> facturas · <b>3</b> presupuestos <span class="up">· actividad al alza</span></div>
+  </div>
+  <svg class="c-chart" width="100%" height="52" viewBox="0 0 400 52" preserveAspectRatio="none">
+    <polyline points="0,42 50,38 100,40 150,26 200,30 250,14 300,20 350,8 400,4" fill="none" stroke="#0E6B5C" stroke-width="1.5" opacity="0.7"/>
+  </svg>
+  <table class="c-table">
+    <thead><tr><th>Fecha</th><th>Estado</th><th class="num">Monto</th></tr></thead>
+    <tbody>
+      <tr><td>02 set. 2026</td><td><span class="badge pending">No completado</span></td><td class="num">$20.00</td></tr>
+      <tr><td>28 ago. 2026</td><td><span class="badge ok">Completado</span></td><td class="num">$340.00</td></tr>
+      <tr><td>25 ago. 2026</td><td><span class="badge ok">Completado</span></td><td class="num">$1,240.00</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  function show(i, btn) {
+    document.querySelectorAll('.panel').forEach((p,idx) => p.classList.toggle('active', idx===i));
+    document.querySelectorAll('.switcher button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>

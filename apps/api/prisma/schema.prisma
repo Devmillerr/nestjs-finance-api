@@ -1,0 +1,427 @@
+// FinanceApi V3 — Prisma schema
+//
+// Cambios respecto a V2 (ver auditoría):
+// - Dinero: de Float a Int (centavos). Sufijo "Cents" en cada campo monetario.
+//   Todo cálculo de dinero en la capa de aplicación se hace con enteros, nunca con
+//   floats. La conversión a formato "19.99" ocurre solo en la capa de presentación.
+// - service_contracts.clientId corregido: ahora referencia users(id), no services(id)
+//   (la migración original de V2 tenía esta FK apuntando a la tabla equivocada).
+// - Índices añadidos en todas las FKs (Postgres no los crea automáticamente).
+// - Timestamps (createdAt/updatedAt) añadidos a tablas que no los tenían.
+// - deletedAt (soft delete) añadido SOLO a los registros financieros primarios
+//   (purchases, invoices, budgets, service_contracts) por trazabilidad/auditoría.
+//   No se aplica a tablas de líneas/detalle para no sobre-diseñar.
+// - RefreshToken: nuevo modelo para la Fase 1 (JWT access + refresh con rotación
+//   y detección de reuso).
+// - "services_worke" renombrado a "service_assignments" (typo en V2, y para que
+//   quede claro que es una asignación de equipo a un contrato, no "trabajo").
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────
+
+enum ProductType {
+  WEB
+  FIVEM
+  DISCORD_BOT
+}
+
+enum PaymentStatus {
+  COMPLETED
+  PENDING
+  NOT_COMPLETED
+  CANCELED
+}
+
+enum PaymentMethod {
+  PAYPAL
+  STRIPE
+  CRYPTO
+}
+
+enum PermissionName {
+  CREATE_USER
+  READ_USER
+  UPDATE_USER
+  DELETE_USER
+  READ_USER_DETAILS
+  UPDATE_USER_DETAILS
+  CREATE_PRODUCT
+  READ_PRODUCT
+  UPDATE_PRODUCT
+  DELETE_PRODUCT
+  CREATE_PURCHASE
+  READ_PURCHASE
+  UPDATE_PURCHASE
+  DELETE_PURCHASE
+  CREATE_INVOICE
+  READ_INVOICE
+  UPDATE_INVOICE
+  DELETE_INVOICE
+  CREATE_BUDGET
+  READ_BUDGET
+  UPDATE_BUDGET
+  DELETE_BUDGET
+  READ_ADMIN_PANEL
+  UPDATE_SETTINGS
+  MANAGE_ROLES
+  VIEW_REPORTS
+  EXPORT_DATA
+  ASSIGN_ROLE
+  VIEW_ACTIVITY_LOG
+  ALL_PERMISSION
+}
+
+enum ContractStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  COMPLETED
+  CANCELED
+}
+
+enum Role {
+  USER
+  TEAM
+  ADMIN
+  OWNER
+}
+
+enum ChargeType {
+  DISCOUNT
+  OTHER
+  TAX
+}
+
+// ── Auth / RBAC ─────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  details       UserDetails?      @relation(fields: [detailsId], references: [id])
+  detailsId     String?           @unique
+  purchases     Purchase[]
+  budgets       Budget[]
+  invoices      Invoice[]
+  permissions   UserPermission[]
+  refreshTokens RefreshToken[]
+  assignments   ServiceAssignment[]
+  serviceContracts ServiceContract[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model UserDetails {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  nickname  String?
+  zipCode   String?
+  address   String?
+  phone     String?
+  updatedAt DateTime @updatedAt
+
+  user User?
+
+  @@map("user_details")
+}
+
+// Refresh tokens: rotación + detección de reuso.
+// Se guarda el HASH del token, nunca el token en claro (igual que una contraseña).
+// `replacedByTokenHash` permite trazar la cadena de rotación y detectar reuso de
+// un token ya rotado (señal de robo de sesión -> se revocan todos los tokens del usuario).
+model RefreshToken {
+  id                  String    @id @default(uuid())
+  tokenHash           String    @unique
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedByTokenHash String?
+  createdAt           DateTime  @default(now())
+  createdByIp         String?
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  name        PermissionName   @unique
+  description String?
+  userGrants  UserPermission[]
+
+  @@map("permissions")
+}
+
+model UserPermission {
+  id           String     @id @default(uuid())
+  userId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@index([permissionId])
+  @@map("user_permissions")
+}
+
+// ── Catálogo ────────────────────────────────────────────────────────────
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String
+  priceCents  Int
+  photoUrl    String
+  type        ProductType @default(WEB)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  purchaseLines PurchaseProduct[]
+  budgetLines   BudgetProduct[]
+  invoiceLines  InvoiceProduct[]
+
+  @@map("products")
+}
+
+// ── Compras ─────────────────────────────────────────────────────────────
+
+model Purchase {
+  id            String        @id @default(uuid())
+  clientId      String
+  client        User          @relation(fields: [clientId], references: [id])
+  paymentMethod PaymentMethod @default(PAYPAL)
+  paymentStatus PaymentStatus @default(NOT_COMPLETED)
+  totalCents    Int           @default(0)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  lines PurchaseProduct[]
+
+  @@index([clientId])
+  @@map("purchases")
+}
+
+// Snapshot de la línea: precio congelado al momento de la compra (priceCents),
+// no se recalcula si el producto cambia de precio después.
+model PurchaseProduct {
+  id             String   @id @default(uuid())
+  purchaseId     String
+  productId      String
+  quantity       Int      @default(1)
+  unitPriceCents Int
+  createdAt      DateTime @default(now())
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([purchaseId])
+  @@index([productId])
+  @@map("purchase_products")
+}
+
+// ── Facturas ────────────────────────────────────────────────────────────
+
+model Invoice {
+  id                String        @id @default(uuid())
+  clientId          String
+  client            User          @relation(fields: [clientId], references: [id])
+  paymentMethod     PaymentMethod @default(PAYPAL)
+  paymentStatus     PaymentStatus @default(NOT_COMPLETED)
+  paymentTransaction String?      @db.Text
+  expiration        DateTime
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  lines   InvoiceProduct[]
+  charges InvoiceCharge[]
+
+  @@index([clientId])
+  @@map("invoices")
+}
+
+model InvoiceCharge {
+  id         String     @id @default(uuid())
+  type       ChargeType @default(OTHER)
+  amountCents Int
+  invoiceId  String
+  invoice    Invoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+
+  @@index([invoiceId])
+  @@map("invoice_charges")
+}
+
+// Snapshot inmutable de la línea de factura: name/description/priceCents copiados
+// al momento de facturar, para que la factura no cambie si el producto/servicio
+// cambia después. Esto ya existía en V2 pero no estaba documentado ni forzado.
+model InvoiceProduct {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  priceCents  Int
+
+  invoiceId         String?
+  productId         String?
+  serviceId         String?
+  serviceContractId String?
+
+  invoice         Invoice?         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product         Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  service         Service?         @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceContract ServiceContract? @relation(fields: [serviceContractId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@index([serviceId])
+  @@index([serviceContractId])
+  @@map("invoice_products")
+}
+
+// ── Presupuestos ────────────────────────────────────────────────────────
+
+model Budget {
+  id          String   @id @default(uuid())
+  clientId    String
+  client      User     @relation(fields: [clientId], references: [id])
+  description String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  lines BudgetProduct[]
+
+  @@index([clientId])
+  @@map("budgets")
+}
+
+model BudgetProduct {
+  id          String  @id @default(uuid())
+  title       String?
+  description String? @db.Text
+  priceCents  Int?    @default(0)
+  budgetId    String
+  productId   String?
+
+  budget  Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([budgetId])
+  @@index([productId])
+  @@map("budget_products")
+}
+
+// ── Servicios y contratos ──────────────────────────────────────────────
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  priceCents  Int
+  photoUrl    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contracts    ServiceContract[]
+  invoiceLines InvoiceProduct[]
+
+  @@map("services")
+}
+
+model ServiceContract {
+  id        String  @id @default(uuid())
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id])
+
+  // Corregido respecto a V2: clientId ahora referencia users(id).
+  // La migración original de V2 apuntaba (por error) a services(id).
+  clientId String
+  client   User   @relation(fields: [clientId], references: [id])
+
+  name        String?
+  description String? @db.Text
+  priceCents  Int?
+  notes       String? @db.Text
+
+  status    ContractStatus @default(PENDING)
+  startDate DateTime
+  endDate   DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  assignments  ServiceAssignment[]
+  invoiceLines InvoiceProduct[]
+
+  @@index([serviceId])
+  @@index([clientId])
+  @@map("service_contracts")
+}
+
+// Renombrado de "services_worke" (V2) — asignación de un usuario/equipo a un
+// contrato de servicio.
+model ServiceAssignment {
+  id                String @id @default(uuid())
+  serviceContractId String
+  userId            String
+  createdAt         DateTime @default(now())
+
+  serviceContract ServiceContract @relation(fields: [serviceContractId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([serviceContractId])
+  @@index([userId])
+  @@map("service_assignments")
+}
+
+// Fase 3: idempotencia en endpoints de creación de pagos/compras. El cliente
+// envía un header Idempotency-Key; un reintento con la misma key + mismo
+// payload devuelve la respuesta guardada (nunca re-ejecuta la creación); la
+// misma key con un payload distinto es un 409 explícito, no un comportamiento
+// silencioso.
+model IdempotencyKey {
+  id           String   @id @default(uuid())
+  key          String
+  userId       String
+  route        String
+  requestHash  String
+  statusCode   Int
+  responseBody Json
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, key, route])
+  @@index([userId])
+  @@map("idempotency_keys")
+}
+

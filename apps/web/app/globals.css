@@ -1,0 +1,159 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+
+  /* FinanceApi — Studio Fintech (dirección aprobada en el mockup de diseño) */
+  --background: #F3F5F4;
+  --foreground: #0B1F1C;
+
+  --card: #FFFFFF;
+  --card-foreground: #0B1F1C;
+
+  --popover: #FFFFFF;
+  --popover-foreground: #0B1F1C;
+
+  --primary: #0E6B5C;
+  --primary-foreground: #FFFFFF;
+
+  --secondary: #F3F5F4;
+  --secondary-foreground: #0B1F1C;
+
+  --muted: #F3F5F4;
+  --muted-foreground: #5C6E69;
+
+  --accent: #E3F2ED;
+  --accent-foreground: #073229;
+
+  --destructive: #B0473F;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #E4E8E6;
+  --input: #E4E8E6;
+  --ring: #0E6B5C;
+  --surface-2: #EEF1F0;
+
+  /* Semánticos de dominio financiero, además de los de shadcn arriba */
+  --success: #1C8A5B;
+  --success-foreground: #FFFFFF;
+  --success-bg: #E6F5EC;
+  --warning: #A6791E;
+  --warning-foreground: #FFFFFF;
+  --warning-bg: #FBF1DE;
+  --info: #2A5FA3;
+  --info-foreground: #FFFFFF;
+  --info-bg: #E7EFFA;
+}
+
+.dark {
+  --background: #0B1F1C;
+  --foreground: #ECF2F0;
+
+  --card: #0F2A25;
+  --card-foreground: #ECF2F0;
+
+  --popover: #0F2A25;
+  --popover-foreground: #ECF2F0;
+
+  --primary: #2FA88F;
+  --primary-foreground: #06201B;
+
+  --secondary: #123830;
+  --secondary-foreground: #ECF2F0;
+
+  --muted: #123830;
+  --muted-foreground: #9BB0AB;
+
+  --accent: #163F37;
+  --accent-foreground: #D7F0E8;
+
+  --destructive: #E27A72;
+  --destructive-foreground: #2A0705;
+
+  --border: rgba(236, 242, 240, 0.12);
+  --input: rgba(236, 242, 240, 0.12);
+  --ring: #2FA88F;
+  --surface-2: #143028;
+
+  --success: #4FBE8B;
+  --success-foreground: #06201B;
+  --success-bg: #103B2E;
+  --warning: #E0B24E;
+  --warning-foreground: #2A1D02;
+  --warning-bg: #3A2C0C;
+  --info: #6FA0DE;
+  --info-foreground: #061A2E;
+  --info-bg: #12283F;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface-2: var(--surface-2);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-bg: var(--warning-bg);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-bg: var(--info-bg);
+
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-plex-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Curvas de easing reales (Emil Kowalski / emil-design-eng): las easings
+   default del navegador son débiles y no transmiten intención. ease-out
+   para elementos que entran/salen o reciben feedback; ease-in-out para
+   movimiento en pantalla (nunca ease-in — arranca lento y se siente lento). */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Reduced motion no es "cero feedback", es una versión más suave: se
+   mantienen los cross-fades de opacidad (ayudan a entender qué cambió) y se
+   elimina el movimiento/transform (Apple Design, sección 14). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
