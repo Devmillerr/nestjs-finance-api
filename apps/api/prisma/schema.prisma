@@ -21,8 +21,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ── Enums ────────────────────────────────────────────────────────────────
@@ -400,6 +401,10 @@ model ServiceAssignment {
   serviceContract ServiceContract @relation(fields: [serviceContractId], references: [id], onDelete: Cascade)
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // El mismo usuario no puede quedar asignado dos veces al mismo contrato
+  // (auditoría: no había ninguna restricción, así que el índice por
+  // separado no evitaba filas duplicadas).
+  @@unique([serviceContractId, userId])
   @@index([serviceContractId])
   @@index([userId])
   @@map("service_assignments")
@@ -410,15 +415,29 @@ model ServiceAssignment {
 // payload devuelve la respuesta guardada (nunca re-ejecuta la creación); la
 // misma key con un payload distinto es un 409 explícito, no un comportamiento
 // silencioso.
+//
+// `status` cierra una carrera de la versión anterior: el registro se creaba
+// DESPUÉS de ejecutar el handler, así que dos requests concurrentes con la
+// misma key pasaban el chequeo "existe la key" y ejecutaban la operación de
+// negocio dos veces. Ahora la key se reserva (PENDING) ANTES de ejecutar el
+// handler -- el UNIQUE de abajo actúa como lock: la segunda request pierde
+// el INSERT y responde 409 en vez de duplicar la escritura. Solo se pasa a
+// COMPLETED (con statusCode/responseBody) cuando el handler termina bien.
+enum IdempotencyStatus {
+  PENDING
+  COMPLETED
+}
+
 model IdempotencyKey {
-  id           String   @id @default(uuid())
+  id           String            @id @default(uuid())
   key          String
   userId       String
   route        String
   requestHash  String
-  statusCode   Int
-  responseBody Json
-  createdAt    DateTime @default(now())
+  status       IdempotencyStatus @default(PENDING)
+  statusCode   Int?
+  responseBody Json?
+  createdAt    DateTime          @default(now())
 
   @@unique([userId, key, route])
   @@index([userId])
