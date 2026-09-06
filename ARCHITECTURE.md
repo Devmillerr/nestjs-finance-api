@@ -80,10 +80,11 @@ cd apps/api
 cp .env.example .env
 ```
 
-En `.env`, reemplaza `DATABASE_URL` con la connection string real de tu proyecto — no puedo obtenerla yo: la API de Supabase no expone el password por seguridad. La sacas de **Supabase Dashboard → Financeapi → Project Settings → Database → Connection string → URI** (elegí "Transaction pooler", puerto 6543, es la recomendada para una app tipo servidor con Prisma). Va a verse algo así:
+En `.env`, reemplaza `DATABASE_URL` y `DIRECT_URL` con la connection string real de tu proyecto — no puedo obtenerla yo: la API de Supabase no expone el password por seguridad. Las sacas de **Supabase Dashboard → Financeapi → Project Settings → Database → Connection string → URI**: `DATABASE_URL` es el "Transaction pooler" (puerto 6543, la recomendada para una app tipo servidor con Prisma en runtime); `DIRECT_URL` es el mismo host pero puerto 5432 sin `pgbouncer=true` — la necesita `prisma migrate`/`db seed` (ver "Validación en máquina real" más abajo: sin esto, `prisma migrate` se cuelga sin error). Van a verse algo así:
 
 ```
 DATABASE_URL="postgresql://postgres.kzjyozmrhpvgmfdtbeoy:[TU-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.kzjyozmrhpvgmfdtbeoy:[TU-PASSWORD]@aws-0-us-east-1.pooler.supabase.com:5432/postgres"
 ```
 
 Luego:
@@ -208,7 +209,7 @@ Este código fue escrito en un sandbox sin acceso de red a `binaries.prisma.sh` 
 
 ```bash
 cd apps/api
-cp .env.example .env        # y completa DATABASE_URL con tu Postgres real
+cp .env.example .env        # y completa DATABASE_URL y DIRECT_URL con tu Postgres real
 npm install
 npx prisma generate
 npx prisma migrate dev --name init
@@ -218,3 +219,14 @@ npm run start:dev
 ```
 
 Si algo falla en `prisma migrate dev` o en el build una vez generado el client, pégame el error exacto y lo resolvemos — preferible a que yo asuma que funcionó.
+
+## Validación en máquina real — completa
+
+Todo lo que el sandbox no pudo confirmar, corrido y verificado en la máquina real:
+
+- **Bug encontrado: `prisma migrate status`/`deploy` se colgaban sin error.** Causa: `DATABASE_URL` apunta al *transaction pooler* de Supabase (puerto 6543, pgbouncer) — modo que no soporta los advisory locks ni prepared statements que `prisma migrate` necesita internamente. Se cuelga en silencio en vez de fallar con un mensaje claro. Fix: `directUrl` agregado al `datasource` de `schema.prisma` + `DIRECT_URL` (mismo host, puerto 5432, sin `pgbouncer=true`) en `.env`/`.env.example`. Runtime sigue usando el pooler (`DATABASE_URL`); solo las migraciones usan la conexión directa.
+- `npx prisma generate` + `npx prisma migrate status`: **"Database schema is up to date!"** — las 4 migraciones (incluidas las 2 nuevas de esta sesión: `add_service_assignment_unique`, `idempotency_key_pending_status`) ya estaban aplicadas contra el Supabase real.
+- Backend: `tsc --noEmit` limpio (los 15 errores de siempre desaparecieron con el client regenerado), `npm run build` limpio, `npm run lint` limpio, **73/73 tests en 13 suites pasan** — incluidas las 2 suites de guards que en el sandbox no corrían por el bloqueo de red a `binaries.prisma.sh`.
+- Frontend: `tsc --noEmit` limpio, `npm run lint` limpio, y **`npm run build` completo por primera vez** (el bloqueo a `fonts.googleapis.com` que afectaba al sandbox no existe acá) — las 23 rutas compilan y prerenderizan sin error.
+
+**Conclusión:** no era solo "confirmar que funciona" — había un bug real de configuración (pooler vs. conexión directa para migraciones) que hubiera bloqueado a cualquiera que clonara el repo y corriera `prisma migrate dev` en una base nueva.

@@ -20,7 +20,7 @@ This is a V2 → V3 rewrite. The original V2 (Express + TypeScript) had no real 
 ## Architecture highlights
 
 - **Money is stored as integers (cents)**, never floats — eliminates binary rounding error class of bugs entirely.
-- **Default-deny authorization**: every endpoint requires a valid JWT unless explicitly marked `@Public()`. RBAC (`@Roles()`) and fine-grained permissions (`@RequirePermissions()`) stack on top; resource ownership (`OwnershipGuard`) is enforced separately from role, so a `USER` can only read/act on their own purchases, budgets, and invoices.
+- **Default-deny authorization**: every endpoint requires a valid JWT unless explicitly marked `@Public()`. RBAC (`@Roles()`) and fine-grained permissions (`@RequirePermissions()`) stack on top; resource ownership (`OwnershipGuard`) is enforced separately from role, so a `USER` can only read/act on their own purchases, budgets, and invoices. `GET /auth/me` exposes the current role/permissions to the frontend (never trusted from the JWT payload — re-resolved from the DB on every request, same as authorization itself); `PATCH /users/:id/role` (OWNER-only) and `POST`/`DELETE /users/:id/permissions` (ADMIN/OWNER) manage them.
 - **Refresh token rotation with reuse detection**: every refresh issues a new token and invalidates the old one. If an already-rotated token is presented again (a strong signal of token theft), every active session for that user is revoked.
 - **Idempotency keys** on the two payment-critical write endpoints (`POST /purchases`, `POST /invoices`): an optional `Idempotency-Key` header guarantees a network retry never creates a duplicate financial record.
 - **Snapshot pattern** on purchase/invoice line items: the price is frozen at transaction time and never recalculated if the underlying product's price changes later — required for financial record immutability.
@@ -38,21 +38,27 @@ apps/api/src/
   invoices/              billing documents (computed totals, post-issuance charges)
   services/              service catalog
   service-contracts/      per-client contracts + team assignments
+  dashboard/            read-only aggregate stats (overdue invoices, client concentration, upcoming/recent activity) for the frontend overview page
   common/
     guards/            JwtAuthGuard, RolesGuard, PermissionsGuard, OwnershipGuard
     decorators/          @Public, @Roles, @RequirePermissions, @OwnedResource, @CurrentUser
     interceptors/        IdempotencyInterceptor
+    tasks/              IdempotencyReaperTask (reaps orphaned PENDING idempotency keys on a cron)
     filters/            AllExceptionsFilter (single error response shape across the API)
   prisma/              PrismaService (single client instance for the whole app)
+
+prisma/seed.ts          seeds the permission catalog + bootstrap OWNER user (see "Running locally")
 ```
 
 ## Running locally
 
 ```bash
 cd apps/api
-cp .env.example .env   # fill in DATABASE_URL, JWT secrets — see .env.example for where to get them
+cp .env.example .env   # fill in DATABASE_URL, DIRECT_URL, JWT secrets, SEED_OWNER_EMAIL/PASSWORD — see .env.example for where to get them
 npm install
 npx prisma generate
+npx prisma migrate deploy   # applies the schema to a fresh database — skip only if it's already up to date
+npx prisma db seed          # seeds the permission catalog + a bootstrap OWNER user (required: there is no other way to create the first admin)
 npm run build
 npm test
 npm run start:dev
@@ -82,4 +88,4 @@ GitHub Actions (`.github/workflows/ci.yml`) runs lint + build + unit tests on ev
 
 ## Status
 
-Backend: Phases 1–4 of the roadmap complete (security foundations, all domain modules, transactional/idempotent writes + structured logging + API docs, and this test/CI pass). Frontend: design direction approved, build not yet started. Full phase-by-phase log in `ARCHITECTURE.md`.
+Backend: feature-complete and connected to a real frontend. All domain modules (auth, users, products, purchases, budgets, invoices, services, service-contracts), RBAC/permission management, and a read-only dashboard-stats endpoint are implemented, tested, and verified end-to-end against a live database. Frontend: an active Next.js dashboard (`apps/web`) already consumes this API — CRUD flows, role-based navigation, and the overview dashboard are wired up and working. Full phase-by-phase log in `ARCHITECTURE.md`.
