@@ -179,5 +179,35 @@ describe('AuthService', () => {
       // Nunca se borra el registro viejo -> queda como evidencia de auditoría
       // de la cadena de rotación.
     });
+
+    it('dos refreshes concurrentes del mismo usuario firman refresh tokens con jti distinto (nunca colisionan)', async () => {
+      (prisma.refreshToken.findUnique as jest.Mock).mockResolvedValue({
+        id: 'rt1',
+        userId: 'u1',
+        revokedAt: null,
+        expiresAt: new Date(Date.now() + 100_000),
+        replacedByTokenHash: null,
+      });
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        id: 'u1',
+        email: 'user@example.com',
+        isActive: true,
+      });
+      (prisma.refreshToken.create as jest.Mock).mockResolvedValue({});
+      (prisma.refreshToken.update as jest.Mock).mockResolvedValue({});
+
+      await service.refresh('valid-token');
+      await service.refresh('valid-token');
+
+      const refreshTokenCalls = jwt.sign.mock.calls.filter(
+        ([payload]) => 'jti' in payload,
+      );
+      expect(refreshTokenCalls).toHaveLength(2);
+      const [firstJti, secondJti] = refreshTokenCalls.map(
+        ([payload]) => payload.jti,
+      );
+      expect(firstJti).toEqual(expect.any(String));
+      expect(firstJti).not.toBe(secondJti);
+    });
   });
 });

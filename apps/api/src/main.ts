@@ -17,9 +17,10 @@ async function bootstrap() {
   app.use(helmet());
 
   // V2 usaba cors() sin opciones -> reflejaba cualquier origen. Acá el
-  // origen permitido viene de env, con un default seguro para desarrollo.
+  // origen permitido viene de env, con un default seguro para desarrollo
+  // (puerto por defecto de `next dev`, el frontend real de este proyecto).
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN', 'http://localhost:5173'),
+    origin: config.get<string>('CORS_ORIGIN', 'http://localhost:3000'),
     credentials: true,
   });
 
