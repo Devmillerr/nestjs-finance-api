@@ -25,6 +25,11 @@ export class PermissionsGuard implements CanActivate {
     // ADMIN/OWNER pasan por rol sin necesitar el permiso explícito asignado.
     if (user.role === 'ADMIN' || user.role === 'OWNER') return true;
 
+    // ALL_PERMISSION es un comodín (equivale a tener todos los permisos).
+    // El frontend ya asume esta semántica en apps/web/lib/nav.ts (canSee());
+    // esto la hace real también del lado del backend, que es quien manda.
+    if (user.permissions.includes(PermissionName.ALL_PERMISSION)) return true;
+
     return requiredPermissions.every((perm) => user.permissions.includes(perm));
   }
 }

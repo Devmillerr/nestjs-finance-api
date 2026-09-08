@@ -6,7 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -148,8 +148,15 @@ export class AuthService {
       },
     );
 
+    // jti aleatorio: sin esto, dos llamadas a issueTokenPair() para el mismo
+    // usuario dentro del mismo segundo (ej. el efecto de montaje de
+    // AuthProvider disparándose dos veces por React Strict Mode, o dos tabs
+    // haciendo login/refresh casi a la vez) firman un JWT IDÉNTICO -- mismo
+    // payload, mismo `iat` (resolución de segundo) -> mismo hash -> el
+    // segundo INSERT en refresh_tokens choca contra el @unique(tokenHash) y
+    // revienta con 409 en vez de emitir un segundo token válido.
     const refreshToken = this.jwt.sign(
-      { sub: userId },
+      { sub: userId, jti: randomUUID() },
       {
         secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
         expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRES_IN', '7d'),

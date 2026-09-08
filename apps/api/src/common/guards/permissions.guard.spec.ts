@@ -63,6 +63,19 @@ describe('PermissionsGuard', () => {
     ).toBe(true);
   });
 
+  it('un USER con ALL_PERMISSION pasa sin tener el permiso exacto otorgado', () => {
+    const reflector = {
+      getAllAndOverride: jest.fn().mockReturnValue(['DELETE_USER']),
+    };
+    const guard = new PermissionsGuard(reflector as unknown as Reflector);
+
+    expect(
+      guard.canActivate(
+        createContext({ role: 'USER', permissions: ['ALL_PERMISSION'] }),
+      ),
+    ).toBe(true);
+  });
+
   it('requiere TODOS los permisos listados, no basta con uno solo', () => {
     const reflector = {
       getAllAndOverride: jest

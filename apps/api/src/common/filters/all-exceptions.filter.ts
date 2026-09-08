@@ -87,6 +87,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
           message: 'El recurso ya existe (violación de restricción única)',
         };
       }
+      // FK restrict (ej. borrar un Product/Service todavía referenciado por
+      // una línea de compra/factura/presupuesto): sin este branch, el 500
+      // genérico de abajo no le dice al cliente por qué falló.
+      if (exception.code === 'P2003') {
+        return {
+          statusCode: HttpStatus.CONFLICT,
+          error: 'Conflict',
+          message: 'No se puede eliminar: el recurso está en uso',
+        };
+      }
     }
 
     return {
