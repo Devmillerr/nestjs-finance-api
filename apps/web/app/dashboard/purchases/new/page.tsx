@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
+import { getErrorMessage } from '@/lib/api';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { LedgerLabel, LedgerInput, LedgerSelect } from '@/components/ui/ledger-field';
@@ -34,7 +35,7 @@ export default function NewPurchasePage() {
   useEffect(() => {
     authFetch('/products?limit=100')
       .then((data) => setProducts((data as { data: Product[] }).data))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar productos'));
+      .catch((err) => setError(getErrorMessage(err, 'Error al cargar productos')));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -79,7 +80,7 @@ export default function NewPurchasePage() {
       toast.success('Compra creada');
       router.push(`/dashboard/purchases/${purchase.id}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo crear la compra';
+      const message = getErrorMessage(err, 'No se pudo crear la compra');
       setError(message);
       toast.error(message);
     } finally {
@@ -135,6 +136,7 @@ export default function NewPurchasePage() {
                 />
                 <button
                   type="button"
+                  aria-label="Quitar línea"
                   disabled={lines.length === 1}
                   onClick={() => removeLine(index)}
                   className="text-muted-foreground/50 transition-colors hover:text-destructive disabled:opacity-30"

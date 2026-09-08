@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
+import { getErrorMessage } from '@/lib/api';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { LedgerLabel, LedgerInput, LedgerSelect } from '@/components/ui/ledger-field';
@@ -42,7 +43,7 @@ export default function NewProductPage() {
       toast.success('Producto creado');
       router.push(`/dashboard/products/${product.id}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo crear el producto';
+      const message = getErrorMessage(err, 'No se pudo crear el producto');
       setError(message);
       toast.error(message);
     } finally {
@@ -66,7 +67,7 @@ export default function NewProductPage() {
             <LedgerLabel>DESCRIPCIÓN</LedgerLabel>
             <LedgerInput value={description} onChange={(e) => setDescription(e.target.value)} />
           </div>
-          <div className="mb-5 grid grid-cols-2 gap-6">
+          <div className="mb-5 grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <LedgerLabel>PRECIO</LedgerLabel>
               <LedgerInput type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className="font-mono" />

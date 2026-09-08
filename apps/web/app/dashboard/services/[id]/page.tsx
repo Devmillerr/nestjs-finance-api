@@ -5,12 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Topbar } from '@/components/layout/topbar';
+import { BackLink } from '@/components/back-link';
+import { DetailSkeleton } from '@/components/detail-skeleton';
 import { Button } from '@/components/ui/button';
 import { LedgerLabel, LedgerInput } from '@/components/ui/ledger-field';
 import { formatCents } from '@/lib/format';
-import { ApiError } from '@/lib/api';
+import { ApiError, getErrorMessage } from '@/lib/api';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface Service {
   id: string;
@@ -42,7 +44,7 @@ export default function ServiceDetailPage() {
         if (err instanceof ApiError && err.status === 404) {
           setError('Este servicio no existe.');
         } else {
-          setError(err instanceof Error ? err.message : 'Error al cargar el servicio');
+          setError(getErrorMessage(err, 'Error al cargar el servicio'));
         }
       });
   };
@@ -74,7 +76,7 @@ export default function ServiceDetailPage() {
       toast.success('Servicio actualizado');
       load();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo guardar el servicio';
+      const message = getErrorMessage(err, 'No se pudo guardar el servicio');
       setError(message);
       toast.error(message);
     } finally {
@@ -88,7 +90,7 @@ export default function ServiceDetailPage() {
       toast.success('Servicio eliminado');
       router.push('/dashboard/services');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo eliminar el servicio';
+      const message = getErrorMessage(err, 'No se pudo eliminar el servicio');
       setError(message);
       toast.error(message);
     }
@@ -99,13 +101,7 @@ export default function ServiceDetailPage() {
       <Topbar title="Detalle de servicio" />
 
       <div className="max-w-lg p-7">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Volver
-        </button>
+        <BackLink />
 
         {error && (
           <div className="mb-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -113,22 +109,27 @@ export default function ServiceDetailPage() {
           </div>
         )}
 
-        {!error && !service && <p className="text-sm text-muted-foreground">Cargando…</p>}
+        {!error && !service && <DetailSkeleton />}
 
         {service && !editing && (
           <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
-            <div className="mb-5 flex items-start justify-between">
-              <div>
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-y-2">
+              <div className="min-w-0">
                 <p className="font-medium">{service.name}</p>
                 <p className="text-sm text-muted-foreground">{service.description}</p>
               </div>
               {/* Mutaciones son ADMIN/OWNER-only en el backend (RolesGuard) --
                   se muestra siempre, el backend responde 403 si no corresponde. */}
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" onClick={startEditing}>
+                <Button variant="outline" size="icon" aria-label="Editar servicio" onClick={startEditing}>
                   <Pencil className="size-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => setConfirmOpen(true)}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Eliminar servicio"
+                  onClick={() => setConfirmOpen(true)}
+                >
                   <Trash2 className="size-4" />
                 </Button>
               </div>

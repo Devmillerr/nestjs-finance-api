@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Topbar } from '@/components/layout/topbar';
+import { BackLink } from '@/components/back-link';
+import { DetailSkeleton } from '@/components/detail-skeleton';
 import { StatusBadge } from '@/components/status-badge';
 import { StatusSelect } from '@/components/status-select';
 import {
@@ -23,8 +25,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatCents, formatDate } from '@/lib/format';
-import { ApiError } from '@/lib/api';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ApiError, getErrorMessage } from '@/lib/api';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface InvoiceLine {
   id: string;
@@ -67,6 +70,7 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [chargeType, setChargeType] = useState('OTHER');
   const [chargeAmount, setChargeAmount] = useState('');
@@ -78,8 +82,10 @@ export default function InvoiceDetailPage() {
       .catch((err) => {
         if (err instanceof ApiError && err.status === 404) {
           setError('Esta factura no existe o no tenés acceso a ella.');
+        } else if (err instanceof ApiError && err.status === 403) {
+          setError('No tenés permiso para ver esta factura.');
         } else {
-          setError(err instanceof Error ? err.message : 'Error al cargar la factura');
+          setError(getErrorMessage(err, 'Error al cargar la factura'));
         }
       });
   };
@@ -96,7 +102,7 @@ export default function InvoiceDetailPage() {
       toast.success('Estado actualizado');
       load();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo actualizar el estado';
+      const message = getErrorMessage(err, 'No se pudo actualizar el estado');
       setError(message);
       toast.error(message);
     } finally {
@@ -120,9 +126,21 @@ export default function InvoiceDetailPage() {
       toast.success('Cargo agregado');
       load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo agregar el cargo');
+      toast.error(getErrorMessage(err, 'No se pudo agregar el cargo'));
     } finally {
       setAddingCharge(false);
+    }
+  }
+
+  async function performDelete() {
+    try {
+      await authFetch(`/invoices/${id}`, { method: 'DELETE' });
+      toast.success('Factura eliminada');
+      router.push('/dashboard/invoices');
+    } catch (err) {
+      const message = getErrorMessage(err, 'No se pudo eliminar la factura');
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -131,13 +149,7 @@ export default function InvoiceDetailPage() {
       <Topbar title="Detalle de factura" />
 
       <div className="p-7">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Volver
-        </button>
+        <BackLink />
 
         {error && (
           <div className="mb-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -145,13 +157,13 @@ export default function InvoiceDetailPage() {
           </div>
         )}
 
-        {!error && !invoice && <p className="text-sm text-muted-foreground">Cargando…</p>}
+        {!error && !invoice && <DetailSkeleton cards={3} />}
 
         {invoice && (
           <div className="flex flex-col gap-4">
             <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex flex-wrap items-start justify-between gap-y-2">
+                <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">
                     Emitida {formatDate(invoice.createdAt)} · vence {formatDate(invoice.expiration)} ·{' '}
                     {invoice.paymentMethod}
@@ -160,7 +172,19 @@ export default function InvoiceDetailPage() {
                     {formatCents(invoice.totalCents)}
                   </p>
                 </div>
-                <StatusBadge status={invoice.paymentStatus} />
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={invoice.paymentStatus} />
+                  {/* Solo ADMIN/OWNER pueden borrar (RolesGuard en el backend).
+                      Se muestra siempre; el backend responde 403 si no corresponde. */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Eliminar factura"
+                    onClick={() => setConfirmOpen(true)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="mt-5 flex items-center gap-3 border-t border-border pt-5">
@@ -221,7 +245,7 @@ export default function InvoiceDetailPage() {
                 </Table>
               )}
 
-              <div className="flex items-end gap-2 border-t border-border p-6">
+              <div className="flex flex-wrap items-end gap-2 border-t border-border p-6">
                 <Select value={chargeType} onValueChange={setChargeType}>
                   <SelectTrigger>
                     <SelectValue />
@@ -240,7 +264,7 @@ export default function InvoiceDetailPage() {
                   placeholder="Monto"
                   value={chargeAmount}
                   onChange={(e) => setChargeAmount(e.target.value)}
-                  className="w-32"
+                  className="w-full sm:w-32"
                 />
                 <Button size="sm" disabled={addingCharge} onClick={addCharge}>
                   <Plus className="size-4" />
@@ -266,6 +290,14 @@ export default function InvoiceDetailPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Eliminar factura"
+        description="Esta acción no se puede deshacer. La factura y sus cargos se van a borrar de forma permanente."
+        onConfirm={performDelete}
+      />
     </>
   );
 }

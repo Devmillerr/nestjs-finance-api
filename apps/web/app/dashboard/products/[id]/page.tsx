@@ -5,12 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Topbar } from '@/components/layout/topbar';
+import { BackLink } from '@/components/back-link';
+import { DetailSkeleton } from '@/components/detail-skeleton';
 import { Button } from '@/components/ui/button';
 import { LedgerLabel, LedgerInput, LedgerSelect } from '@/components/ui/ledger-field';
 import { formatCents } from '@/lib/format';
-import { ApiError } from '@/lib/api';
+import { ApiError, getErrorMessage } from '@/lib/api';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -51,7 +53,7 @@ export default function ProductDetailPage() {
         if (err instanceof ApiError && err.status === 404) {
           setError('Este producto no existe.');
         } else {
-          setError(err instanceof Error ? err.message : 'Error al cargar el producto');
+          setError(getErrorMessage(err, 'Error al cargar el producto'));
         }
       });
   };
@@ -85,7 +87,7 @@ export default function ProductDetailPage() {
       toast.success('Producto actualizado');
       load();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo guardar el producto';
+      const message = getErrorMessage(err, 'No se pudo guardar el producto');
       setError(message);
       toast.error(message);
     } finally {
@@ -99,7 +101,7 @@ export default function ProductDetailPage() {
       toast.success('Producto eliminado');
       router.push('/dashboard/products');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo eliminar el producto';
+      const message = getErrorMessage(err, 'No se pudo eliminar el producto');
       setError(message);
       toast.error(message);
     }
@@ -110,33 +112,32 @@ export default function ProductDetailPage() {
       <Topbar title="Detalle de producto" />
 
       <div className="max-w-lg p-7">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Volver
-        </button>
+        <BackLink />
 
         {error && (
           <div className="mb-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>
         )}
 
-        {!error && !product && <p className="text-sm text-muted-foreground">Cargando…</p>}
+        {!error && !product && <DetailSkeleton />}
 
         {product && !editing && (
           <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
-            <div className="mb-5 flex items-start justify-between">
-              <div>
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-y-2">
+              <div className="min-w-0">
                 <p className="font-medium">{product.name}</p>
                 <p className="text-sm text-muted-foreground">{product.description}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{TYPE_LABELS[product.type]}</p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" onClick={startEditing}>
+                <Button variant="outline" size="icon" aria-label="Editar producto" onClick={startEditing}>
                   <Pencil className="size-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => setConfirmOpen(true)}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Eliminar producto"
+                  onClick={() => setConfirmOpen(true)}
+                >
                   <Trash2 className="size-4" />
                 </Button>
               </div>
@@ -156,7 +157,7 @@ export default function ProductDetailPage() {
               <LedgerLabel>DESCRIPCIÓN</LedgerLabel>
               <LedgerInput value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
-            <div className="mb-6 grid grid-cols-2 gap-6">
+            <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <LedgerLabel>PRECIO</LedgerLabel>
                 <LedgerInput type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className="font-mono" />

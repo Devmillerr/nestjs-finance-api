@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
+import { getErrorMessage } from '@/lib/api';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { LedgerLabel, LedgerInput } from '@/components/ui/ledger-field';
@@ -35,7 +36,7 @@ export default function NewServicePage() {
       toast.success('Servicio creado');
       router.push(`/dashboard/services/${service.id}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo crear el servicio';
+      const message = getErrorMessage(err, 'No se pudo crear el servicio');
       setError(message);
       toast.error(message);
     } finally {

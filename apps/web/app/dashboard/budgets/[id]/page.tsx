@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Topbar } from '@/components/layout/topbar';
+import { BackLink } from '@/components/back-link';
+import { DetailSkeleton } from '@/components/detail-skeleton';
 import { Button } from '@/components/ui/button';
 import { LedgerLabel, LedgerInput } from '@/components/ui/ledger-field';
 import {
@@ -19,9 +21,9 @@ import {
   type BudgetLineForm,
 } from '@/components/budget-line-editor';
 import { formatCents, formatDate } from '@/lib/format';
-import { ApiError } from '@/lib/api';
+import { ApiError, getErrorMessage } from '@/lib/api';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface BudgetLine {
   id: string;
@@ -66,7 +68,7 @@ export default function BudgetDetailPage() {
         } else if (err instanceof ApiError && err.status === 403) {
           setError('No tenés permiso para ver este presupuesto.');
         } else {
-          setError(err instanceof Error ? err.message : 'Error al cargar el presupuesto');
+          setError(getErrorMessage(err, 'Error al cargar el presupuesto'));
         }
       });
   };
@@ -117,7 +119,7 @@ export default function BudgetDetailPage() {
       toast.success('Presupuesto actualizado');
       load();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo guardar el presupuesto';
+      const message = getErrorMessage(err, 'No se pudo guardar el presupuesto');
       setError(message);
       toast.error(message);
     } finally {
@@ -131,7 +133,7 @@ export default function BudgetDetailPage() {
       toast.success('Presupuesto eliminado');
       router.push('/dashboard/budgets');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo eliminar el presupuesto';
+      const message = getErrorMessage(err, 'No se pudo eliminar el presupuesto');
       setError(message);
       toast.error(message);
     }
@@ -144,13 +146,7 @@ export default function BudgetDetailPage() {
       <Topbar title="Detalle de presupuesto" />
 
       <div className="max-w-2xl p-7">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Volver
-        </button>
+        <BackLink />
 
         {error && (
           <div className="mb-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -158,12 +154,12 @@ export default function BudgetDetailPage() {
           </div>
         )}
 
-        {!error && !budget && <p className="text-sm text-muted-foreground">Cargando…</p>}
+        {!error && !budget && <DetailSkeleton />}
 
         {budget && !editing && (
           <div className="rounded-xl border border-border bg-card shadow-xs">
-            <div className="flex items-start justify-between border-b border-border p-6">
-              <div>
+            <div className="flex flex-wrap items-start justify-between gap-y-2 border-b border-border p-6">
+              <div className="min-w-0">
                 <p className="text-xs text-muted-foreground">{formatDate(budget.createdAt)}</p>
                 <p className="font-medium">{budget.description}</p>
               </div>
@@ -171,10 +167,15 @@ export default function BudgetDetailPage() {
                 {/* Solo el dueño o ADMIN/OWNER pueden editar/borrar (OwnershipGuard
                     en el backend). Se muestra siempre; el backend responde 403
                     si no corresponde. */}
-                <Button variant="outline" size="icon" onClick={startEditing}>
+                <Button variant="outline" size="icon" aria-label="Editar presupuesto" onClick={startEditing}>
                   <Pencil className="size-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => setConfirmOpen(true)}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="Eliminar presupuesto"
+                  onClick={() => setConfirmOpen(true)}
+                >
                   <Trash2 className="size-4" />
                 </Button>
               </div>

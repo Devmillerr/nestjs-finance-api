@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
+import { getErrorMessage } from '@/lib/api';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { LedgerLabel, LedgerInput, LedgerSelect } from '@/components/ui/ledger-field';
@@ -19,9 +20,16 @@ interface Product {
   name: string;
   priceCents: number;
 }
+interface Service {
+  id: string;
+  name: string;
+  priceCents: number;
+}
 interface Line {
-  mode: 'product' | 'freeform';
-  productId: string;
+  mode: 'catalog' | 'freeform';
+  // Codificado como "product:<id>" o "service:<id>" -- un solo <select> para
+  // todo el catálogo, en vez de una pestaña más en el toggle de arriba.
+  catalogRef: string;
   name: string;
   priceCents: string; // string mientras se edita, se convierte a centavos al enviar
 }
@@ -29,7 +37,7 @@ interface Line {
 const PAYMENT_METHODS = ['PAYPAL', 'STRIPE', 'CRYPTO'];
 
 function emptyLine(): Line {
-  return { mode: 'product', productId: '', name: '', priceCents: '' };
+  return { mode: 'catalog', catalogRef: '', name: '', priceCents: '' };
 }
 
 export default function NewInvoicePage() {
@@ -37,6 +45,7 @@ export default function NewInvoicePage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [clientId, setClientId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
   const [expiration, setExpiration] = useState('');
@@ -51,10 +60,13 @@ export default function NewInvoicePage() {
     // tratamos el resto de las acciones restringidas por rol en el frontend.
     authFetch('/users?limit=100')
       .then((data) => setClients((data as { data: Client[] }).data))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar clientes'));
+      .catch((err) => setError(getErrorMessage(err, 'Error al cargar clientes')));
     authFetch('/products?limit=100')
       .then((data) => setProducts((data as { data: Product[] }).data))
-      .catch((err) => setError(err instanceof Error ? err.message : 'Error al cargar productos'));
+      .catch((err) => setError(getErrorMessage(err, 'Error al cargar productos')));
+    authFetch('/services?limit=100')
+      .then((data) => setServices((data as { data: Service[] }).data))
+      .catch((err) => setError(getErrorMessage(err, 'Error al cargar servicios')));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -82,12 +94,20 @@ export default function NewInvoicePage() {
     }
 
     const payloadLines = lines
-      .map((l) =>
-        l.mode === 'product'
-          ? { productId: l.productId }
-          : { name: l.name, priceCents: Math.round(Number(l.priceCents) * 100) },
-      )
-      .filter((l) => ('productId' in l && l.productId) || ('name' in l && l.name));
+      .map((l) => {
+        if (l.mode !== 'catalog') {
+          return { name: l.name, priceCents: Math.round(Number(l.priceCents) * 100) };
+        }
+        const [kind, refId] = l.catalogRef.split(':');
+        if (kind === 'service') return { serviceId: refId };
+        return { productId: refId };
+      })
+      .filter(
+        (l) =>
+          ('productId' in l && l.productId) ||
+          ('serviceId' in l && l.serviceId) ||
+          ('name' in l && l.name),
+      );
 
     if (payloadLines.length === 0) {
       setError('Agregá al menos una línea.');
@@ -108,7 +128,7 @@ export default function NewInvoicePage() {
       toast.success('Factura emitida');
       router.push(`/dashboard/invoices/${invoice.id}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo crear la factura';
+      const message = getErrorMessage(err, 'No se pudo crear la factura');
       setError(message);
       toast.error(message);
     } finally {
@@ -124,7 +144,7 @@ export default function NewInvoicePage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
           <h2 className="mb-6 text-[15px] font-semibold">Nueva factura</h2>
 
-          <div className="mb-6 grid grid-cols-2 gap-6">
+          <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <LedgerLabel>CLIENTE</LedgerLabel>
               <LedgerSelect value={clientId} onChange={(e) => setClientId(e.target.value)}>
@@ -164,8 +184,8 @@ export default function NewInvoicePage() {
                   <div className="flex gap-4">
                     <button
                       type="button"
-                      onClick={() => updateLine(index, { mode: 'product' })}
-                      className={`text-[12px] font-mono tracking-wide transition-colors ${line.mode === 'product' ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}
+                      onClick={() => updateLine(index, { mode: 'catalog' })}
+                      className={`text-[12px] font-mono tracking-wide transition-colors ${line.mode === 'catalog' ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground'}`}
                     >
                       DEL CATÁLOGO
                     </button>
@@ -179,6 +199,7 @@ export default function NewInvoicePage() {
                   </div>
                   <button
                     type="button"
+                    aria-label="Quitar línea"
                     disabled={lines.length === 1}
                     onClick={() => removeLine(index)}
                     className="text-muted-foreground/50 transition-colors hover:text-destructive disabled:opacity-30"
@@ -187,17 +208,30 @@ export default function NewInvoicePage() {
                   </button>
                 </div>
 
-                {line.mode === 'product' ? (
+                {line.mode === 'catalog' ? (
                   <LedgerSelect
-                    value={line.productId}
-                    onChange={(e) => updateLine(index, { productId: e.target.value })}
+                    value={line.catalogRef}
+                    onChange={(e) => updateLine(index, { catalogRef: e.target.value })}
                   >
-                    <option value="">Seleccioná un producto…</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} — {formatCents(p.priceCents)}
-                      </option>
-                    ))}
+                    <option value="">Seleccioná del catálogo…</option>
+                    {products.length > 0 && (
+                      <optgroup label="Productos">
+                        {products.map((p) => (
+                          <option key={`product:${p.id}`} value={`product:${p.id}`}>
+                            {p.name} — {formatCents(p.priceCents)}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {services.length > 0 && (
+                      <optgroup label="Servicios">
+                        {services.map((s) => (
+                          <option key={`service:${s.id}`} value={`service:${s.id}`}>
+                            {s.name} — {formatCents(s.priceCents)}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </LedgerSelect>
                 ) : (
                   <div className="flex gap-4">

@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Topbar } from '@/components/layout/topbar';
+import { BackLink } from '@/components/back-link';
+import { DetailSkeleton } from '@/components/detail-skeleton';
 import { StatusBadge } from '@/components/status-badge';
 import { StatusSelect } from '@/components/status-select';
 import {
@@ -16,8 +18,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatCents, formatDate } from '@/lib/format';
-import { ApiError } from '@/lib/api';
-import { ArrowLeft } from 'lucide-react';
+import { ApiError, getErrorMessage } from '@/lib/api';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface PurchaseLine {
@@ -45,6 +49,7 @@ export default function PurchaseDetailPage() {
   const [purchase, setPurchase] = useState<PurchaseDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const load = () => {
     authFetch(`/purchases/${id}`)
@@ -52,8 +57,10 @@ export default function PurchaseDetailPage() {
       .catch((err) => {
         if (err instanceof ApiError && err.status === 404) {
           setError('Esta compra no existe o no tenés acceso a ella.');
+        } else if (err instanceof ApiError && err.status === 403) {
+          setError('No tenés permiso para ver esta compra.');
         } else {
-          setError(err instanceof Error ? err.message : 'Error al cargar la compra');
+          setError(getErrorMessage(err, 'Error al cargar la compra'));
         }
       });
   };
@@ -70,11 +77,23 @@ export default function PurchaseDetailPage() {
       toast.success('Estado actualizado');
       load();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo actualizar el estado';
+      const message = getErrorMessage(err, 'No se pudo actualizar el estado');
       setError(message);
       toast.error(message);
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function performDelete() {
+    try {
+      await authFetch(`/purchases/${id}`, { method: 'DELETE' });
+      toast.success('Compra eliminada');
+      router.push('/dashboard/purchases');
+    } catch (err) {
+      const message = getErrorMessage(err, 'No se pudo eliminar la compra');
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -83,13 +102,7 @@ export default function PurchaseDetailPage() {
       <Topbar title="Detalle de compra" />
 
       <div className="p-7">
-        <button
-          onClick={() => router.back()}
-          className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Volver
-        </button>
+        <BackLink />
 
         {error && (
           <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -97,15 +110,13 @@ export default function PurchaseDetailPage() {
           </div>
         )}
 
-        {!error && !purchase && (
-          <p className="text-sm text-muted-foreground">Cargando…</p>
-        )}
+        {!error && !purchase && <DetailSkeleton cards={2} />}
 
         {purchase && (
           <div className="flex flex-col gap-4">
             <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex flex-wrap items-start justify-between gap-y-2">
+                <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">
                     {formatDate(purchase.createdAt)} · {purchase.paymentMethod}
                   </p>
@@ -113,12 +124,22 @@ export default function PurchaseDetailPage() {
                     {formatCents(purchase.totalCents)}
                   </p>
                 </div>
-                <StatusBadge status={purchase.paymentStatus} />
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={purchase.paymentStatus} />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Eliminar compra"
+                    onClick={() => setConfirmOpen(true)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               </div>
 
-              {/* El cambio de estado es exclusivo de ADMIN/OWNER en el backend
-                  (RolesGuard). El access token no lleva rol -- se muestra
-                  siempre, el backend responde 403 si no corresponde. */}
+              {/* El cambio de estado y el borrado son exclusivos de ADMIN/OWNER
+                  en el backend (RolesGuard). El access token no lleva rol -- se
+                  muestran siempre, el backend responde 403 si no corresponde. */}
               <div className="mt-5 flex items-center gap-3 border-t border-border pt-5">
                 <span className="text-sm text-muted-foreground">Estado</span>
                 <StatusSelect
@@ -172,6 +193,14 @@ export default function PurchaseDetailPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Eliminar compra"
+        description="Esta acción no se puede deshacer. La compra y sus líneas se van a borrar de forma permanente."
+        onConfirm={performDelete}
+      />
     </>
   );
 }
