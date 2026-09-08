@@ -8,7 +8,7 @@
 
 - Backend: 🟢 Cerrado.
 - Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado.
-- Único pendiente del proyecto: **commitear el trabajo** (ver "Próximo objetivo").
+- Todo el trabajo está commiteado (13 commits, ver "Último commit"). Único pendiente del proyecto: `git push` (no ejecutado, a criterio del usuario).
 
 ## Etapas
 
@@ -46,35 +46,35 @@ La auditoría de frontend en sí (la que originó el punteo de bloqueadores/pend
 
 ## Último commit
 
-- Hash: `f742b5a`
-- Mensaje: fix: finalize backend validation and Supabase connection
+- Hash: `f200524`
+- Mensaje: docs: add session continuity rules and project status tracking
 
-## Cambios pendientes de commit
+## Historial de esta sesión (13 commits, en orden)
 
-Nada de lo siguiente está commiteado todavía (44 archivos trackeados modificados + ~30 nuevos):
+1. `bcad7a7` fix(api): harden auth flow, error handling and permission guards
+2. `3ccf97a` feat(api): protect invoice charges with idempotency keys and reap orphaned ones
+3. `8eed0b6` feat(api): add role and permission management for users
+4. `790577c` feat(api): add dashboard stats aggregation endpoint
+5. `49f65dd` chore(api): add prisma seed for permission catalog and bootstrap owner
+6. `d3380ff` fix(api): enforce unique service contract assignments
+7. `c1dd341` feat(web): redesign navigation shell with mobile drawer, theme toggle and command palette
+8. `9be4ec2` feat(web): add resilient error boundaries and loading states
+9. `070a1f1` refactor(web): adopt shared layout components across CRUD pages
+10. `6869aa9` feat(web): connect dashboard overview to real backend stats
+11. `7b1cf92` feat(web): add service contracts module UI
+12. `fdfb85a` feat(web): add roles and permissions management UI to user profile
+13. `f200524` docs: add session continuity rules and project status tracking
 
-**Backend (`apps/api`)**
-- Modificados: `auth.controller.ts`, `auth.service.ts`, `permissions.guard.ts`, `all-exceptions.filter.ts`, `idempotency.interceptor.ts`, `users.controller.ts`, `users.service.ts` (+fix aditivo de `findOne` para roles/permisos), `invoices.controller.ts`, `main.ts`, `app.module.ts`, `package.json`
-- Nuevos: módulo `dashboard/`, módulo `common/tasks/` (idempotency-reaper), DTOs `grant-permission.dto.ts` y `update-user-role.dto.ts`, `prisma/seed.ts`, migraciones `add_service_assignment_unique` e `idempotency_key_pending_status`
-- Specs nuevos: `all-exceptions.filter.spec.ts`, `ownership.guard.spec.ts`, `idempotency.interceptor.spec.ts`, `invoices.service.spec.ts`, `users.service.spec.ts` (fixture actualizado por el cambio de `findOne`)
+Validado tras los 13 commits: `apps/api` (`tsc --noEmit`, `lint`, `build`, `test` → 73/73) y `apps/web` (`tsc --noEmit`, `lint`, `build` → 23 rutas) todo en verde, sin necesidad de commits correctivos.
 
-**Frontend (`apps/web`)**
-- Etapa 1 (Consistencia): `sidebar.tsx`, `topbar.tsx`, `globals.css`, `page-header.tsx`, `command-palette.tsx`, `ui/dialog.tsx`, `ui/table.tsx`, `lib/api.ts`, `lib/nav.ts` (nuevo), `components/mobile-nav.tsx` + `providers/mobile-nav-provider.tsx` (nuevos), `providers/theme-provider.tsx` (nuevo)
-- Etapa 2 (Resiliencia): `error.tsx`/`not-found.tsx` (raíz y dashboard), `dashboard/loading.tsx`, `components/error-state.tsx`, `components/detail-skeleton.tsx`, `components/back-link.tsx`, `providers/auth-provider.tsx`
-- Reescritura de `dashboard/page.tsx` (conectado a `/dashboard/stats`)
-- Módulo Service Contracts (`app/dashboard/service-contracts/`) completo
-- Roles y permisos: `app/dashboard/users/[id]/page.tsx` (nueva card), `components/role-badge.tsx` (nuevo), `components/permission-chip.tsx` (nuevo), `lib/permissions.ts` (nuevo)
-- Fix responsive (Etapa 3): `app/dashboard/service-contracts/[id]/page.tsx`, `app/dashboard/users/[id]/page.tsx` (fila de asignar/otorgar)
-- Ajustes en todas las páginas de detalle/lista/nuevo de budgets, invoices, products, purchases, services, users
-
-**Suelto (excluido del repo):** `Dashboard - Auditoría y Conceptos.dc.html`
+**Suelto (excluido del repo, sin trackear a propósito):** `Dashboard - Auditoría y Conceptos.dc.html`, `apps/api/package-lock.json`, `apps/web/package-lock.json`.
 
 ## Próximo objetivo
 
-1. Commitear el trabajo pendiente en commits lógicos separados (backend/frontend/documentación), mostrando antes los commits propuestos y archivos incluidos/excluidos, según la regla de Session Continuity en `CLAUDE.md` — propuesta en revisión con el usuario.
+1. `git push` cuando el usuario lo decida — no ejecutado en esta sesión.
 
 ## Notas importantes
 
-- No quedan pendientes de diagnóstico, implementación ni QA — todo lo de arriba está cerrado. Lo único que falta es el trabajo mecánico de commitear.
+- No quedan pendientes de diagnóstico, implementación, QA ni de commit — todo lo de arriba está cerrado y en el historial de git.
 - Los widgets "Pronto" del dashboard son una decisión de alcance deliberada, no un faltante: quedan como roadmap/post-MVP.
 - `apps/api/package-lock.json` y `apps/web/package-lock.json` quedan fuera del repositorio por decisión explícita del usuario.
