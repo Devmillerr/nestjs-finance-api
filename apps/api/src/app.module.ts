@@ -18,6 +18,7 @@ import { BudgetsModule } from './budgets/budgets.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { ServicesModule } from './services/services.module';
 import { ServiceContractsModule } from './service-contracts/service-contracts.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -85,6 +86,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
     InvoicesModule,
     ServicesModule,
     ServiceContractsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [
