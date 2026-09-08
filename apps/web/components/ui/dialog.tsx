@@ -43,7 +43,12 @@ function DialogContent({
         // formulario modal), esa instancia puede agregar animate-in via
         // className sin afectar al Cmd+K.
         className={cn(
-          'fixed top-[14vh] left-1/2 z-50 w-full max-w-lg -translate-x-1/2 rounded-xl border border-border bg-card p-0 shadow-lg',
+          // w-[calc(100%-2rem)] en vez de w-full: por debajo del ancho de
+          // max-w-lg, el diálogo (Cmd+K, ConfirmDialog) quedaba pegado borde
+          // a borde contra la pantalla, sin gutter -- este cálculo deja 1rem
+          // de aire de cada lado en mobile, y no cambia nada una vez que el
+          // viewport supera max-w-lg (ahí manda el max-width, igual que antes).
+          'fixed top-[14vh] left-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-xl border border-border bg-card p-0 shadow-lg',
           className,
         )}
         {...props}
