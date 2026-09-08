@@ -4,10 +4,12 @@ import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
 import type { IncomingMessage } from 'http';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { IdempotencyReaperTask } from './common/tasks/idempotency-reaper.task';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
@@ -71,6 +73,9 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
         limit: 100,
       },
     ]),
+    // Habilita @Cron()/@Interval() en toda la app (usado por
+    // IdempotencyReaperTask para liberar keys PENDING huérfanas).
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -84,6 +89,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
   controllers: [AppController],
   providers: [
     AppService,
+    IdempotencyReaperTask,
     // Orden importa: primero rate limit, luego autenticación, luego
     // autorización por rol/permiso. Todo global -> "seguro por defecto",
     // los endpoints públicos se marcan explícitamente con @Public().

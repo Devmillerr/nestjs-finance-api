@@ -68,7 +68,11 @@ export class InvoicesController {
     return this.invoicesService.updateStatus(id, dto);
   }
 
+  // Igual que POST /invoices: agrega dinero a la factura, así que un doble
+  // submit del back-office (ej. doble click en "agregar cargo") merece la
+  // misma protección de Idempotency-Key.
   @Roles('ADMIN', 'OWNER')
+  @UseInterceptors(IdempotencyInterceptor)
   @Post(':id/charges')
   addCharge(@Param('id') id: string, @Body() dto: InvoiceChargeDto) {
     return this.invoicesService.addCharge(id, dto);
