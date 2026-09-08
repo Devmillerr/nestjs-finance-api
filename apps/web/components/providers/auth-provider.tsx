@@ -11,12 +11,19 @@ import {
 import { useRouter } from 'next/navigation';
 import { decodeAccessToken, type AccessTokenPayload } from '@/lib/jwt';
 import { apiFetch, ApiError } from '@/lib/api';
+import type { NavViewer } from '@/lib/nav';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 interface AuthContextValue {
   status: AuthStatus;
   user: AccessTokenPayload | null;
+  // Rol + permisos actuales, resueltos por el backend vía GET /auth/me (no
+  // vienen en el JWT -- ver la nota en lib/jwt.ts sobre por qué). null
+  // mientras se resuelve o si falló la carga; navGroupsFor(null) ya trata
+  // ese caso como "sin gating todavía", así que no hace falta un tercer
+  // estado de carga separado acá.
+  viewer: NavViewer | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   // Wrapper de apiFetch que ya conoce el access token actual y reintenta
@@ -35,11 +42,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // también se refleja en `user` (state) para que la UI re-renderice.
   const accessTokenRef = useRef<string | null>(null);
   const [user, setUser] = useState<AccessTokenPayload | null>(null);
+  const [viewer, setViewer] = useState<NavViewer | null>(null);
 
   const setSession = useCallback((accessToken: string | null) => {
     accessTokenRef.current = accessToken;
     setUser(accessToken ? decodeAccessToken(accessToken) : null);
     setStatus(accessToken ? 'authenticated' : 'unauthenticated');
+
+    if (!accessToken) {
+      setViewer(null);
+      return;
+    }
+
+    // Fire-and-forget: la navegación se gatea por rol/permiso apenas estén
+    // disponibles, pero no hace falta bloquear el login/refresh esperando
+    // esta respuesta -- mientras tanto navGroupsFor(null) muestra todo,
+    // igual que antes de que este endpoint existiera.
+    void apiFetch('/auth/me', accessToken)
+      .then((data) => setViewer(data as NavViewer))
+      .catch(() => setViewer(null));
   }, []);
 
   const silentRefresh = useCallback(async (): Promise<string | null> => {
@@ -71,14 +92,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      let res: Response;
+      try {
+        res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+      } catch {
+        // El fetch en sí falló (sin red, servidor de Next caído) -- nunca el
+        // texto crudo del navegador acá, que no significa nada para el
+        // usuario final.
+        throw new Error('No se pudo conectar con el servidor. Revisá tu conexión e intentá de nuevo.');
+      }
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message ?? 'No se pudo iniciar sesión');
+        // data.message es el mensaje real del backend (ver AllExceptionsFilter,
+        // apps/api) -- ya pensado para mostrarse, string o array de
+        // class-validator.
+        const message = Array.isArray(data.message) ? data.message.join(' ') : data.message;
+        throw new Error(message ?? 'No se pudo iniciar sesión');
       }
       setSession(data.accessToken);
     },
@@ -110,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ status, user, login, logout, authFetch }}>
+    <AuthContext.Provider value={{ status, user, viewer, login, logout, authFetch }}>
       {children}
     </AuthContext.Provider>
   );
