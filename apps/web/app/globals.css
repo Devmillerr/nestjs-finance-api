@@ -10,6 +10,7 @@
    no queda ningún token que lo referencie. */
 :root {
   --radius: 0.625rem;
+  color-scheme: light;
 
   --background: #ECEEF8;
   --foreground: #292B31;
@@ -72,6 +73,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --background: #12131F;
   --foreground: #E9E9ED;
 
