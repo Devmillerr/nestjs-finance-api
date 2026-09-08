@@ -8,18 +8,26 @@ import { Topbar } from '@/components/layout/topbar';
 import { BackLink } from '@/components/back-link';
 import { DetailSkeleton } from '@/components/detail-skeleton';
 import { Button } from '@/components/ui/button';
-import { LedgerLabel, LedgerInput } from '@/components/ui/ledger-field';
+import { LedgerLabel, LedgerInput, LedgerSelect } from '@/components/ui/ledger-field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RoleBadge, ROLE_LABELS } from '@/components/role-badge';
+import { PermissionChip } from '@/components/permission-chip';
 import { formatDate } from '@/lib/format';
 import { ApiError, getErrorMessage } from '@/lib/api';
 import { ConfirmDialog } from '@/components/confirm-dialog';
-import { Pencil, UserX } from 'lucide-react';
+import type { Role } from '@/lib/nav';
+import { ALL_PERMISSIONS, PERMISSION_LABELS, type AllPermissionName } from '@/lib/permissions';
+import { Pencil, UserX, Plus } from 'lucide-react';
+
+const ROLE_OPTIONS: Role[] = ['USER', 'TEAM', 'ADMIN', 'OWNER'];
 
 interface UserDetail {
   id: string;
   email: string;
-  role: string;
+  role: Role;
   isActive: boolean;
   createdAt: string;
+  permissions: AllPermissionName[];
   details: {
     firstName: string;
     lastName: string;
@@ -32,7 +40,7 @@ interface UserDetail {
 
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { authFetch } = useAuth();
+  const { authFetch, user, viewer } = useAuth();
   const [profile, setProfile] = useState<UserDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -43,6 +51,20 @@ export default function UserDetailPage() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+
+  const [updatingRole, setUpdatingRole] = useState(false);
+  const [grantSelection, setGrantSelection] = useState('');
+  const [granting, setGranting] = useState(false);
+  const [revokingPermission, setRevokingPermission] = useState<AllPermissionName | null>(null);
+
+  // Presentación únicamente -- el backend revalida con RolesGuard/PermissionsGuard
+  // en cada request, igual que el resto de los controles admin-only de esta app.
+  const isSelf = profile?.id === user?.sub;
+  const canChangeRole = viewer?.role === 'OWNER' && !isSelf;
+  const canManagePermissions = viewer?.role === 'ADMIN' || viewer?.role === 'OWNER';
+  const grantablePermissions = profile
+    ? ALL_PERMISSIONS.filter((p) => !profile.permissions.includes(p))
+    : [];
 
   const load = () => {
     authFetch(`/users/${id}`)
@@ -97,6 +119,59 @@ export default function UserDetailPage() {
       const message = getErrorMessage(err, 'No se pudo desactivar la cuenta');
       setError(message);
       toast.error(message);
+    }
+  }
+
+  async function changeRole(role: Role) {
+    setUpdatingRole(true);
+    try {
+      await authFetch(`/users/${id}/role`, {
+        method: 'PATCH',
+        body: JSON.stringify({ role }),
+      });
+      toast.success('Rol actualizado');
+      load();
+    } catch (err) {
+      const message = getErrorMessage(err, 'No se pudo actualizar el rol');
+      setError(message);
+      toast.error(message);
+    } finally {
+      setUpdatingRole(false);
+    }
+  }
+
+  async function grantPermission() {
+    if (!grantSelection) return;
+    setGranting(true);
+    try {
+      await authFetch(`/users/${id}/permissions`, {
+        method: 'POST',
+        body: JSON.stringify({ permission: grantSelection }),
+      });
+      setGrantSelection('');
+      toast.success('Permiso otorgado');
+      load();
+    } catch (err) {
+      const message = getErrorMessage(err, 'No se pudo otorgar el permiso');
+      setError(message);
+      toast.error(message);
+    } finally {
+      setGranting(false);
+    }
+  }
+
+  async function revokePermission(permission: AllPermissionName) {
+    setRevokingPermission(permission);
+    try {
+      await authFetch(`/users/${id}/permissions/${permission}`, { method: 'DELETE' });
+      toast.success('Permiso revocado');
+      load();
+    } catch (err) {
+      const message = getErrorMessage(err, 'No se pudo revocar el permiso');
+      setError(message);
+      toast.error(message);
+    } finally {
+      setRevokingPermission(null);
     }
   }
 
@@ -163,6 +238,89 @@ export default function UserDetailPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {profile && (
+          <div className="mt-4 rounded-xl border border-border bg-card shadow-xs">
+            <div className="border-b border-border px-6 py-4">
+              <p className="text-sm font-semibold">Rol y permisos</p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-4">
+              <span className="text-sm text-muted-foreground">Rol</span>
+              {canChangeRole ? (
+                <Select
+                  value={profile.role}
+                  onValueChange={(value) => changeRole(value as Role)}
+                  disabled={updatingRole}
+                >
+                  <SelectTrigger>
+                    <SelectValue>
+                      <RoleBadge role={profile.role} />
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLE_OPTIONS.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <RoleBadge role={profile.role} />
+              )}
+              {isSelf && (
+                <span className="text-xs text-muted-foreground/60">
+                  No podés cambiar tu propio rol.
+                </span>
+              )}
+            </div>
+
+            <div className="px-6 py-4">
+              <p className="text-sm text-muted-foreground">
+                Permisos adicionales otorgados a este usuario, más allá de lo que ya cubre su rol.
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {profile.permissions.length === 0 ? (
+                  <p className="text-xs text-muted-foreground/60">
+                    Sin permisos adicionales — usa los del rol.
+                  </p>
+                ) : (
+                  profile.permissions.map((p) => (
+                    <PermissionChip
+                      key={p}
+                      label={PERMISSION_LABELS[p] ?? p}
+                      removing={revokingPermission === p}
+                      onRemove={canManagePermissions ? () => revokePermission(p) : undefined}
+                    />
+                  ))
+                )}
+              </div>
+
+              {canManagePermissions && (
+                <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:items-center">
+                  <LedgerSelect
+                    value={grantSelection}
+                    onChange={(e) => setGrantSelection(e.target.value)}
+                    className="sm:w-auto"
+                  >
+                    <option value="">Seleccioná un permiso…</option>
+                    {grantablePermissions.map((p) => (
+                      <option key={p} value={p}>
+                        {PERMISSION_LABELS[p]}
+                      </option>
+                    ))}
+                  </LedgerSelect>
+                  <Button size="sm" disabled={!grantSelection || granting} onClick={grantPermission}>
+                    <Plus className="size-4" />
+                    Otorgar
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
