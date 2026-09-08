@@ -58,6 +58,7 @@ export function BudgetLineEditor({
               </div>
               <button
                 type="button"
+                aria-label="Quitar línea"
                 disabled={lines.length === 1}
                 onClick={() => onRemove(index)}
                 className="text-muted-foreground/50 transition-colors hover:text-destructive disabled:opacity-30"

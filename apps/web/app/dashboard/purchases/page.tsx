@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/providers/auth-provider';
+import { getErrorMessage } from '@/lib/api';
 import { Topbar } from '@/components/layout/topbar';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
@@ -43,7 +44,7 @@ export default function PurchasesListPage() {
     authFetch(`/purchases?page=${page}&limit=10`)
       .then((data) => setResult(data as PaginatedResponse))
       .catch((err) =>
-        setError(err instanceof Error ? err.message : 'Error al cargar compras'),
+        setError(getErrorMessage(err, 'Error al cargar compras')),
       );
   }, [authFetch, page]);
 
@@ -53,7 +54,6 @@ export default function PurchasesListPage() {
 
       <div className="p-7">
         <PageHeader
-          title="Compras"
           description={result ? `${result.meta.total} en total` : undefined}
           actions={
             <Button asChild size="sm">
@@ -129,6 +129,7 @@ export default function PurchasesListPage() {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Página anterior"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
@@ -137,6 +138,7 @@ export default function PurchasesListPage() {
                 <Button
                   variant="outline"
                   size="icon"
+                  aria-label="Página siguiente"
                   disabled={page >= result.meta.totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >

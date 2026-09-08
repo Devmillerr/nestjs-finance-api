@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-provider';
-import { apiFetch, ApiError } from '@/lib/api';
+import { apiFetch, getErrorMessage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { LedgerLabel, LedgerInput } from '@/components/ui/ledger-field';
 
@@ -34,15 +34,7 @@ export default function RegisterPage() {
       await login(email, password);
       router.push('/dashboard');
     } catch (err) {
-      if (err instanceof ApiError) {
-        const body = err.body as { message?: string | string[] } | null;
-        const message = Array.isArray(body?.message)
-          ? body.message.join(', ')
-          : (body?.message ?? 'No se pudo crear la cuenta');
-        setError(message);
-      } else {
-        setError(err instanceof Error ? err.message : 'No se pudo crear la cuenta');
-      }
+      setError(getErrorMessage(err, 'No se pudo crear la cuenta'));
     } finally {
       setLoading(false);
     }
@@ -69,7 +61,7 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="mb-5 grid grid-cols-2 gap-6">
+          <div className="mb-5 grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <LedgerLabel>NOMBRE</LedgerLabel>
               <LedgerInput
