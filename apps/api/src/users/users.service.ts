@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PermissionName, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto, paginate } from '../common/dto/pagination.dto';
@@ -115,8 +119,36 @@ export class UsersService {
 
   // Restringido a OWNER en el controller: ADMIN no puede ascender a otro
   // usuario a ADMIN/OWNER (evita una cadena de escalamiento de privilegios).
-  async updateRole(id: string, role: Role) {
-    await this.findOne(id);
+  //
+  // Dos guardas server-side (hallazgo de la auditoría: la protección previa
+  // era solo de frontend -- users/[id]/page.tsx deshabilitaba el control,
+  // pero el endpoint mismo aceptaba el cambio si se llamaba directo):
+  //
+  // 1. Un OWNER nunca puede cambiar su propio rol a uno inferior. Chequeo
+  //    incondicional por id, no depende de cuántos OWNER activos queden.
+  // 2. Nunca se permite dejar el sistema sin ningún OWNER activo -- cubre
+  //    también el caso de un OWNER degradando a *otro* OWNER cuando ese es
+  //    el último que queda activo, no solo la auto-degradación.
+  async updateRole(id: string, role: Role, actingUserId: string) {
+    const target = await this.findOne(id);
+
+    if (id === actingUserId && role !== 'OWNER') {
+      throw new ForbiddenException(
+        'No podés cambiar tu propio rol a uno inferior a OWNER.',
+      );
+    }
+
+    if (target.role === 'OWNER' && target.isActive && role !== 'OWNER') {
+      const activeOwners = await this.prisma.user.count({
+        where: { role: 'OWNER', isActive: true },
+      });
+      if (activeOwners <= 1) {
+        throw new ForbiddenException(
+          'No se puede quitar el rol OWNER al último OWNER activo del sistema.',
+        );
+      }
+    }
+
     const user = await this.prisma.user.update({
       where: { id },
       data: { role },

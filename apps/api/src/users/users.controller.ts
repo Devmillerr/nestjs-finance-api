@@ -19,6 +19,8 @@ import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { OwnedResource } from '../common/decorators/owned-resource.decorator';
 import { OwnershipGuard } from '../common/guards/ownership.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('users')
@@ -62,8 +64,12 @@ export class UsersController {
   // una cadena de escalamiento de privilegios entre administradores).
   @Roles('OWNER')
   @Patch(':id/role')
-  updateRole(@Param('id') id: string, @Body() dto: UpdateUserRoleDto) {
-    return this.usersService.updateRole(id, dto.role);
+  updateRole(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserRoleDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.usersService.updateRole(id, dto.role, user.userId);
   }
 
   @Roles('ADMIN', 'OWNER')
