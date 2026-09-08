@@ -23,7 +23,7 @@ services:
     # postinstall (node_modules/@prisma/client/package.json), pero se deja
     # explícito acá a propósito -- no depender de un postinstall implícito
     # que alguien podría desactivar sin darse cuenta.
-    buildCommand: npm install && npx prisma generate && npm run build
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
     # OJO: no es `npm run start:prod` ni `node dist/main`. nest-cli.json
     # tiene sourceRoot:"src", así que `nest build` compila a dist/src/*.js,
     # no a dist/*.js -- el script start:prod de apps/api/package.json
