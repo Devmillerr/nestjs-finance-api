@@ -2,7 +2,18 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 function Table({ className, ...props }: React.ComponentProps<'table'>) {
-  return <table className={cn('w-full caption-bottom text-sm', className)} {...props} />;
+  // Envuelve la tabla en su propio contenedor con scroll horizontal -- antes
+  // las páginas ponían <Table> directo dentro de un contenedor con
+  // overflow-hidden (pensado solo para recortar esquinas redondeadas), así
+  // que una tabla más ancha que la pantalla no scrolleaba: recortaba
+  // contenido de forma invisible. Con esto, si una tabla no entra, scrollea
+  // sola dentro de su caja -- nunca la página completa. Cambio en un solo
+  // lugar: las 8 páginas que ya usan <Table> lo heredan sin tocarlas.
+  return (
+    <div className="w-full overflow-x-auto">
+      <table className={cn('w-full caption-bottom text-sm', className)} {...props} />
+    </div>
+  );
 }
 
 function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
@@ -38,7 +49,7 @@ function TableHead({
   return (
     <th
       className={cn(
-        'h-10 px-4 text-[11px] font-medium text-muted-foreground',
+        'h-10 px-4 font-mono text-[11px] font-normal tracking-[0.08em] text-muted-foreground uppercase',
         align === 'left' ? 'text-left' : 'text-right',
         className,
       )}
