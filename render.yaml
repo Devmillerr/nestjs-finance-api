@@ -1,0 +1,59 @@
+# Render Blueprint para el backend de FinanceApi V3.
+#
+# Este archivo solo describe CÓMO desplegar apps/api -- no crea ninguna base
+# de datos en Render. DATABASE_URL/DIRECT_URL siguen apuntando al proyecto
+# Supabase existente; se pegan manualmente en el dashboard de Render (por
+# eso las variables sensibles de abajo tienen `sync: false` y ningún
+# `value`: ese campo le dice a Render "esta variable existe, pedísela al
+# usuario", nunca commitea un secreto real en este repo).
+#
+# apps/api tiene su propio package.json + package-lock.json (instala con
+# npm, no con pnpm -- aunque pnpm-workspace.yaml declara el monorepo como
+# pnpm, node_modules/CI de este proyecto ya corren con npm; usar npm acá
+# evita depender de esa inconsistencia). `rootDir` hace que Render ejecute
+# todos los comandos de abajo parado en apps/api, como si fuera un proyecto
+# Node independiente.
+services:
+  - type: web
+    name: financeapi-api
+    env: node
+    plan: free
+    rootDir: apps/api
+    # @prisma/client ya corre `prisma generate` solo en su propio hook
+    # postinstall (node_modules/@prisma/client/package.json), pero se deja
+    # explícito acá a propósito -- no depender de un postinstall implícito
+    # que alguien podría desactivar sin darse cuenta.
+    buildCommand: npm install && npx prisma generate && npm run build
+    # OJO: no es `npm run start:prod` ni `node dist/main`. nest-cli.json
+    # tiene sourceRoot:"src", así que `nest build` compila a dist/src/*.js,
+    # no a dist/*.js -- el script start:prod de apps/api/package.json
+    # ("node dist/main") apunta a un archivo que no existe y falla con
+    # MODULE_NOT_FOUND (verificado corriendo el build real: dist/main.js no
+    # se genera, dist/src/main.js sí). Se usa la ruta real acá en vez de
+    # tocar ese script -- no era parte de lo pedido en esta tarea.
+    startCommand: node dist/src/main
+    # GET /health ya existe en apps/api/src/app.controller.ts: público
+    # (@Public()), fuera del prefijo /api/v1 a propósito, sin dependencias
+    # (no toca la base de datos) -- pensado exactamente para esto.
+    healthCheckPath: /health
+    envVars:
+      # No es secreto: se fija acá directo, no depende de lo que alguien
+      # setee (o se olvide de setear) en el dashboard.
+      - key: NODE_ENV
+        value: production
+      # PORT no se declara: Render lo inyecta solo en cada servicio web, y
+      # apps/api/src/main.ts ya lee PORT de env (con fallback a 5050 solo
+      # para dev local) -- declararlo acá pisaría el valor real de Render.
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      # Origen único del frontend en Vercel, sin wildcard -- se pega la URL
+      # real recién cuando exista (apps/api/src/main.ts:22-25 ya lee esto de
+      # env, un solo string, nunca "*").
+      - key: CORS_ORIGIN
+        sync: false
