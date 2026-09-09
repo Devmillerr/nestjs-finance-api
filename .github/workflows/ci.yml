@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [feat/finance-api-complete]
   pull_request:
-    branches: [main]
+    branches: [feat/finance-api-complete]
 
 jobs:
   api:
