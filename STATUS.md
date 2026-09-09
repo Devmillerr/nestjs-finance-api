@@ -2,7 +2,7 @@
 
 ## Fecha de última actualización
 
-2026-09-08
+2026-09-09
 
 ## Estado general
 
@@ -47,8 +47,8 @@ La auditoría de frontend en sí (la que originó el punteo de bloqueadores/pend
 
 ## Último commit
 
-- Hash: `f200524`
-- Mensaje: docs: add session continuity rules and project status tracking
+- Hash: `eb03aeb`
+- Mensaje: fix(ci): trigger workflow on the actual production branch
 
 ## Historial de esta sesión (13 commits, en orden)
 
@@ -72,14 +72,33 @@ Validado tras los 13 commits: `apps/api` (`tsc --noEmit`, `lint`, `build`, `test
 
 ## Próximo objetivo
 
-1. Aprobar (o no) el commit del fix de `apps/web/lib/format.ts` (bug de fechas -1 día, encontrado en QA funcional del 2026-09-08).
-2. Fuera de eso, nada pendiente — el `git push` de `feat/finance-api-complete` ya fue completado; la rama está publicada y sincronizada con `origin`.
+1. Decidir qué hacer con lo que sigue suelto en el working tree (sin commitear): `apps/api/prisma/seed-qa.ts` + el script `prisma:seed:qa` agregado en `apps/api/package.json`, y los archivos de debris de una sesión anterior (`batch_plan.json`, `chunks_meta.json`, `deploy_files.json`, `deploy_files_trimmed.json`, `apps/web/_print_batch.js`, y el `.dc.html` de diseño — estos últimos ya fuera del repo a propósito).
+2. Pendientes de auditoría de seguridad ya documentados y no bloqueantes para portafolio: Swagger `/docs` público, `deactivate()` sin el mismo chequeo de auto-acción que `updateRole`, 6 vulnerabilidades moderate de `@nestjs/core`, `npm audit` no automatizado en CI.
+3. Fuera de eso, nada pendiente — el proyecto está desplegado en producción, verificado en vivo de punta a punta (ver sesión de abajo), y `feat/finance-api-complete` está pusheada y sincronizada con `origin`.
 
 ## Notas importantes
 
-- No quedan pendientes de diagnóstico, implementación, QA ni de commit — todo lo de arriba está cerrado y en el historial de git.
 - Los widgets "Pronto" del dashboard son una decisión de alcance deliberada, no un faltante: quedan como roadmap/post-MVP.
 - `apps/api/package-lock.json` y `apps/web/package-lock.json` quedan fuera del repositorio por decisión explícita del usuario.
+
+## Cierre de sesión (2026-09-09) — auditoría de despliegue en producción + fixes críticos
+
+Auditoría real de producción (no solo lectura de código): GitHub, backend en Render, frontend en Vercel, Supabase, seguridad, usuarios QA y recorrido funcional completo en navegador real (Chrome, vía `claude-in-chrome`) con sesión `qa.owner`.
+
+**Verificado en vivo (curl contra `https://financeapi-api-m7tt.onrender.com`, API de GitHub, API de Vercel, SQL directo a Supabase, y navegador real):**
+- Rama por defecto en GitHub: `feat/finance-api-complete`, sin PRs abiertos, `V2` intacta sin ancestro común.
+- Backend: `/health` ok, login/refresh/logout funcionando, rotación de refresh token con detección de reuso (revoca todas las sesiones), rate limiting real (`5/60s` login, `100/60s` general), RBAC y `OwnershipGuard` bloqueando correctamente accesos cruzados, DTO validation bloqueando inyección, `NODE_ENV=production` confirmado en `render.yaml`.
+- Los 11 usuarios QA (`qa.owner/admin/user/limited/inactive/team1/team2/cliente1-4`) existen en la base de producción con roles/permisos/estado exactos al seed; `qa.inactive` correctamente rechazado en login.
+- Frontend: build limpio en Vercel (23 rutas), sin `localhost` hardcodeado en el bundle de producción, 0 runtime errors server-side.
+
+**Bugs reales encontrados y su resolución:**
+1. **CORS crítico (bloqueaba toda la app para un usuario real):** `CORS_ORIGIN` en Render apuntaba a una URL de deployment de Vercel específica (que cambia con cada push), no al dominio estable `https://financeapi-v3-web.vercel.app`. Corregido por el usuario en el dashboard de Render.
+2. **Login roto en producción:** `API_URL` (env var server-only del BFF de Next.js, distinta de `NEXT_PUBLIC_BACKEND_URL`) estaba mal seteada en Vercel — apuntaba a `.../api/v` sin el `1`, rompiendo login/logout/refresh con 404. Corregido por el usuario en Vercel.
+3. **CI de GitHub Actions nunca corría:** `.github/workflows/ci.yml` disparaba sobre push/PR a `main`, rama que no existe (solo hay `V2` y `feat/finance-api-complete`). Corregido en código, commiteado (`eb03aeb`) y pusheado a `origin`.
+
+**Verificación final post-fix (navegador real, sesión `qa.owner`):** login → Cabina → Facturas → Compras → Productos → Servicios → Presupuestos → Contratos → Usuarios → Logout, sin errores de consola ni 404/401/500/CORS en ningún paso. Cookie de refresh confirmada httpOnly (`document.cookie` vacío desde JS). Refresh funciona con sesión activa (200) y queda revocado tras logout (401 "No hay sesión activa"). Ruta protegida (`/dashboard`) redirige a `/login` sin sesión.
+
+**Conclusión:** proyecto verificado end-to-end en producción real, listo para portafolio. Único hallazgo no bloqueante durante la verificación: algunos `503` puntuales en prefetches en background de Next.js sobre rutas de detalle de factura (no reprodujo en la corrida final, no afectó ninguna navegación real de usuario) — no investigado a fondo, anotado por si reaparece.
 
 ## Cierre de sesión (2026-09-08) — publicación
 
@@ -107,4 +126,4 @@ Auditoría de seguridad de solo lectura (14 puntos: secrets, RLS/Supabase, JWT, 
   - Tests: `apps/api/src/users/users.service.spec.ts` — 4 casos nuevos (bloqueo auto-degradación, no-op de reafirmar OWNER, bloqueo de último OWNER por terceros, permitir degradar OWNER con otros activos) + 2 existentes actualizados a la nueva firma de 3 argumentos.
   - Validado: `tsc --noEmit` ✅, `eslint` ✅ (tras un auto-fix de prettier en el spec), `npm test` → 77/77 (antes 73/73), `npm run build` ✅.
 - **Fix 2 — `package-lock.json` sin trackear rompía la premisa de la CI.** `.github/workflows/ci.yml` usa `npm ci` + `cache-dependency-path: apps/api/package-lock.json`, pero ese archivo (y el de `apps/web`) nunca estuvieron en git. Verificado con `npm install --dry-run` y `npm ci --dry-run` (ambos "up to date", sin cambios de versión) que los lockfiles en disco están en sync con sus `package.json` — se agregaron tal cual al repo, sin tocar ninguna versión de dependencia.
-- **Pendiente:** ambos fixes están en el working tree, sin `git add`/`commit` (regla del proyecto: mostrar el plan y esperar aprobación antes de commitear). El usuario pidió explícitamente no hacer `git push` en esta sesión y no tocar `V2` — ninguna de las dos cosas se tocó. HTTPS quedó fuera de alcance a propósito (el resto de los hallazgos de la auditoría, incluido HTTPS, siguen pendientes de aprobación individual).
+- Ambos fixes commiteados en `0cbd9de` (`fix(security): harden owner role changes and lockfile reproducibility`) y pusheados a `origin/feat/finance-api-complete` (`0247084..0cbd9de`) con aprobación explícita del usuario. Rama al día con `origin`, sin divergencia. No se tocó `V2`, no se hizo merge/rebase/reset/force push. HTTPS y el resto de los hallazgos de la auditoría (Swagger `/docs` público, `deactivate()` sin el mismo chequeo de auto-acción, `npm audit` no automatizado en CI, las 6 vulnerabilidades moderate de `@nestjs/core`) siguen pendientes de aprobación individual.
