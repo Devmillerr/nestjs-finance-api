@@ -2,7 +2,7 @@
 
 ## Fecha de última actualización
 
-2026-09-09
+2026-09-10
 
 ## Estado general
 
@@ -47,8 +47,8 @@ La auditoría de frontend en sí (la que originó el punteo de bloqueadores/pend
 
 ## Último commit
 
-- Hash: `eb03aeb`
-- Mensaje: fix(ci): trigger workflow on the actual production branch
+- Hash: `97858ab`
+- Mensaje: chore(api): add idempotent QA seed script
 
 ## Historial de esta sesión (13 commits, en orden)
 
@@ -72,14 +72,36 @@ Validado tras los 13 commits: `apps/api` (`tsc --noEmit`, `lint`, `build`, `test
 
 ## Próximo objetivo
 
-1. Decidir qué hacer con lo que sigue suelto en el working tree (sin commitear): `apps/api/prisma/seed-qa.ts` + el script `prisma:seed:qa` agregado en `apps/api/package.json`, y los archivos de debris de una sesión anterior (`batch_plan.json`, `chunks_meta.json`, `deploy_files.json`, `deploy_files_trimmed.json`, `apps/web/_print_batch.js`, y el `.dc.html` de diseño — estos últimos ya fuera del repo a propósito).
-2. Pendientes de auditoría de seguridad ya documentados y no bloqueantes para portafolio: Swagger `/docs` público, `deactivate()` sin el mismo chequeo de auto-acción que `updateRole`, 6 vulnerabilidades moderate de `@nestjs/core`, `npm audit` no automatizado en CI.
-3. Fuera de eso, nada pendiente — el proyecto está desplegado en producción, verificado en vivo de punta a punta (ver sesión de abajo), y `feat/finance-api-complete` está pusheada y sincronizada con `origin`.
+1. Pendientes de auditoría de seguridad ya documentados y no bloqueantes para portafolio: Swagger `/docs` público, `deactivate()` sin el mismo chequeo de auto-acción que `updateRole`, 6 vulnerabilidades moderate de `@nestjs/core`, `npm audit` no automatizado en CI.
+2. Fuera de eso, nada pendiente — el repo quedó cerrado para portafolio en la sesión de 2026-09-10 (ver abajo): working tree limpio, `feat/finance-api-complete` pusheada y sincronizada con `origin`, `V2` intacta.
 
 ## Notas importantes
 
 - Los widgets "Pronto" del dashboard son una decisión de alcance deliberada, no un faltante: quedan como roadmap/post-MVP.
 - `apps/api/package-lock.json` y `apps/web/package-lock.json` quedan fuera del repositorio por decisión explícita del usuario.
+
+## Cierre de sesión (2026-09-10) — cierre de repositorio para portafolio
+
+Objetivo de la sesión: dejar `feat/finance-api-complete` limpia y lista para portafolio tras el despliegue en producción, sin tocar `V2` y sin merge/rebase/reset/force push. Todo ejecutado paso a paso con diff mostrado y confirmación explícita del usuario antes de cada commit.
+
+**Paso 1 — publicar el commit de docs pendiente:**
+- `b669190` (docs: update status — auditoría de despliegue en producción) estaba commiteado local pero no pusheado. `git push` (fast-forward simple) lo publicó. Verificado `origin/feat/finance-api-complete` == `HEAD` local tras el push.
+
+**Paso 2 — script de seed de QA:**
+- Revisión estática (sin ejecutar el script, por decisión explícita del usuario: el `.env` local apunta al mismo proyecto Supabase de producción documentado abajo, y correrlo habría escrito contra esa base compartida).
+- Confirmado por lectura de código que `apps/api/prisma/seed-qa.ts` es idempotente: usuarios por `upsert` (email único), catálogo por `findFirst`+`create` (sin duplicar en reruns), permisos por `upsert` (clave compuesta única), y documentos financieros (compras/facturas/presupuestos/contratos) se saltean en bloque si ya existen (chequeo sobre `cliente1`).
+- Confirmado que `apps/api/package.json` solo agrega la línea `"prisma:seed:qa": "ts-node prisma/seed-qa.ts"` a `scripts`; el bloque `"prisma": { "seed": "ts-node prisma/seed.ts" }` (usado por `prisma db seed` / `prisma migrate dev`) queda intacto.
+- Commit `97858ab` (`chore(api): add idempotent QA seed script`) con únicamente esos dos archivos, pusheado a `origin/feat/finance-api-complete`.
+
+**Paso 3 — limpieza de debris temporal:**
+- Confirmado por grep en todo el repo (código, `package.json` de ambas apps, imports) que `apps/web/_print_batch.js`, `batch_plan.json`, `chunks_meta.json`, `deploy_files.json` y `deploy_files_trimmed.json` no tenían ninguna referencia fuera de sí mismos y de este documento — eran debris de una sesión anterior (dumps de contenido fuente y un script ad-hoc para paginarlos), fuera del árbol de rutas de Next.js (`apps/web/_print_batch.js` vive en la raíz de `apps/web`, no en `app/`).
+- Eliminados del disco. **No generaron commit**: los 5 archivos nunca estuvieron trackeados por git (eran `??` en `git status` desde el inicio de la sesión), así que no había nada que commitear ni pushear para su borrado — solo desaparecieron de la lista de untracked.
+- No se tocó `Dashboard - Auditoría y Conceptos.dc.html` (excluido a propósito, por instrucción explícita).
+
+**Resultado final de la sesión:**
+- 2 commits nuevos pusheados a `origin/feat/finance-api-complete`: `b669190` → `97858ab`.
+- Working tree limpio salvo el único archivo suelto intencional (`Dashboard - Auditoría y Conceptos.dc.html`) y los `package-lock.json` (excluidos por decisión previa del usuario, ver Notas importantes).
+- `V2` intacta: no se ejecutó ningún `merge`/`rebase`/`reset`/`force push` en toda la sesión; solo `git push` fast-forward sobre `feat/finance-api-complete`.
 
 ## Cierre de sesión (2026-09-09) — auditoría de despliegue en producción + fixes críticos
 
