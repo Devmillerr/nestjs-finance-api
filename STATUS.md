@@ -72,13 +72,37 @@ Validado tras los 13 commits: `apps/api` (`tsc --noEmit`, `lint`, `build`, `test
 
 ## Próximo objetivo
 
-1. Pendientes de auditoría de seguridad ya documentados y no bloqueantes para portafolio: Swagger `/docs` público, `deactivate()` sin el mismo chequeo de auto-acción que `updateRole`, 6 vulnerabilidades moderate de `@nestjs/core`, `npm audit` no automatizado en CI.
-2. Fuera de eso, nada pendiente — el repo quedó cerrado para portafolio en la sesión de 2026-09-10 (ver abajo): working tree limpio, `feat/finance-api-complete` pusheada y sincronizada con `origin`, `V2` intacta.
+1. **Pendiente de aprobación del usuario (fuera de este repo):** commit en el portfolio (`D:\miler-portfolio-final\miler-portfolio`, repo separado) que presenta FinanceApi v3 como proyecto destacado en la sección `Projects`. Implementado y validado (lint/typecheck/build en verde), pendiente de revisión visual final del usuario antes de commitear — ver detalle en la sesión de abajo. No afecta a este repositorio.
+2. Pendientes de auditoría de seguridad ya documentados y no bloqueantes para portafolio: Swagger `/docs` público, `deactivate()` sin el mismo chequeo de auto-acción que `updateRole`, 6 vulnerabilidades moderate de `@nestjs/core`, `npm audit` no automatizado en CI.
+3. Fuera de eso, nada pendiente en este repo — quedó cerrado para portafolio en la sesión de 2026-09-10: working tree limpio, `feat/finance-api-complete` pusheada y sincronizada con `origin`, `V2` intacta.
 
 ## Notas importantes
 
 - Los widgets "Pronto" del dashboard son una decisión de alcance deliberada, no un faltante: quedan como roadmap/post-MVP.
 - `apps/api/package-lock.json` y `apps/web/package-lock.json` quedan fuera del repositorio por decisión explícita del usuario.
+
+## Cierre de sesión (2026-09-10) — FinanceApi v3 destacado en el portfolio (repo externo, sin commitear)
+
+**Nota de alcance:** esta sesión trabajó también sobre un repositorio distinto — el portfolio del usuario en `D:\miler-portfolio-final\miler-portfolio` (proyecto Next.js aparte, deploy en `https://portfolio-delta-fawn-41.vercel.app`). No es parte de este repo (`financeapi-v3-fase1-diseno`); se documenta acá porque es continuación directa del cierre de sesión anterior y porque el usuario pidió actualizar este `STATUS.md`.
+
+**Objetivo:** dejar de mostrar FinanceApi v3 como una card de texto genérica ("API Finanzas") en la sección `Projects` del portfolio, y presentarlo como proyecto full-stack destacado, con screenshots reales de la app en producción.
+
+**Investigación (solo lectura, sin cambios):**
+- Se abrió `https://financeapi-v3-web.vercel.app` en un navegador real (sesión ya autenticada, sin necesidad de credenciales) y se recorrió: Cabina/Dashboard, Facturas (listado + detalle), Compras, Contratos, Productos, Usuarios (listado + perfil con roles/permisos).
+- Se seleccionaron 3 screenshots reales (sin generar ni inventar ninguna imagen): **Cabina/Dashboard** (principal — vende visualmente el proyecto), **Detalle de factura** (funcionalidad — líneas facturadas, cargos, cambio de estado), **Perfil de usuario · Rol y permisos** (RBAC — complejidad técnica).
+- Se ubicó el repo del portfolio en disco (`D:\miler-portfolio-final\miler-portfolio`, Next.js + TypeScript + Tailwind + Framer Motion) y se identificaron los archivos que controlan `Projects`: `components/sections/Projects.tsx` (layout), `lib/constants.ts` (copy de cada proyecto), `components/projects/DigiProyDemo.tsx` (patrón de card featured existente) y `components/projects/RepoStats.tsx` (stats de GitHub en vivo, reutilizado).
+
+**Diseño aprobado por el usuario:** grid de 2 filas — fila 1: DigiProy full width, sin tocar; fila 2: FinanceApi v3 (~65%, destacado) + Mega Red (~35%, compacto, sin cambio de contenido). Descripción actualizada a "Sistema financiero full-stack con backend NestJS y frontend Next.js: facturación, compras, contratos de servicio y catálogo, con RBAC (roles y permisos granulares), autenticación JWT con rotación de sesión, e idempotencia en operaciones mutables. Desplegado en producción." Tecnologías: NestJS, Next.js, TypeScript, Prisma, PostgreSQL, JWT, RBAC. Sin métricas inventadas (se decidió omitirlas — las únicas cifras disponibles son tamaños de dataset QA, no logros de adopción reales).
+
+**Implementación (en el repo del portfolio, todavía sin commitear):**
+- Nuevo componente `components/projects/FinanceApiShowcase.tsx`: identidad visual propia (ventana de navegador con barra de URL real + tabs con etiqueta "Cabina/Factura/Roles", crossfade manual, sin autoplay) — deliberadamente distinto del patrón de "device frame" que usa `DigiProyDemo.tsx`.
+- `lib/constants.ts`: se quitó "API Finanzas" de `secondaryProjects` (ahora solo Mega Red) y se agregó `financeApiProject`.
+- `components/sections/Projects.tsx`: grid reestructurado a 2 filas; nueva card featured de FinanceApi v3 con CTA doble ("Ver demo en vivo" → `financeapi-v3-web.vercel.app`, "Ver repositorio" → GitHub) + `RepoStats` en vivo.
+- 3 capturas agregadas a `public/`: `financeapi-dashboard.jpg`, `financeapi-invoice.jpg`, `financeapi-roles.jpg`.
+
+**Validado (ejecutado de verdad en el repo del portfolio):** `npm run lint` ✅ exit 0, `npx tsc --noEmit` ✅ exit 0, `npm run build` ✅ sin errores. Revisión visual en navegador real (`npm run dev`): DigiProy intacto, fila nueva se ve correcta, los 3 tabs cambian de imagen sin overflow, consola sin errores. No se pudo forzar un viewport móvil real con las herramientas de este entorno (limitación ya conocida) — el comportamiento responsive se verificó por código (el grid nuevo no define columnas por debajo de `lg`, mismo patrón que ya usaba el grid original).
+
+**Estado:** implementación completa, dev server dejado corriendo en `http://localhost:3000/#projects` para que el usuario haga su propia revisión visual final. **Sin commit** — a la espera de aprobación explícita del usuario antes de commitear en el repo del portfolio.
 
 ## Cierre de sesión (2026-09-10) — cierre de repositorio para portafolio
 
