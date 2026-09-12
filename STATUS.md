@@ -2,12 +2,12 @@
 
 ## Fecha de última actualización
 
-2026-09-10
+2026-09-11
 
 ## Estado general
 
-- Backend: 🟢 Cerrado.
-- Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado.
+- Backend: 🟢 Cerrado. `GET /dashboard/stats` extendido (ver sesión 2026-09-11) con agregaciones nuevas para la Cabina rediseñada.
+- Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado. Paleta de colores y vista Cabina rediseñadas por completo (ver sesión 2026-09-11).
 - Todo el trabajo está commiteado y publicado. La rama `feat/finance-api-complete` fue pusheada correctamente a `origin` y está al día (`up to date with 'origin/feat/finance-api-complete'`). Proyecto publicado y sincronizado.
 - La rama `V2` permanece intacta en `origin`; ambas historias (`feat/finance-api-complete` y `V2`) siguen sin ancestro común (`git merge-base` no encuentra base compartida).
 
@@ -47,8 +47,8 @@ La auditoría de frontend en sí (la que originó el punteo de bloqueadores/pend
 
 ## Último commit
 
-- Hash: `97858ab`
-- Mensaje: chore(api): add idempotent QA seed script
+- Hash: `d44dd15`
+- Mensaje: Actualización final
 
 ## Historial de esta sesión (13 commits, en orden)
 
@@ -72,14 +72,35 @@ Validado tras los 13 commits: `apps/api` (`tsc --noEmit`, `lint`, `build`, `test
 
 ## Próximo objetivo
 
-1. **Pendiente de aprobación del usuario (fuera de este repo):** commit en el portfolio (`D:\miler-portfolio-final\miler-portfolio`, repo separado) que presenta FinanceApi v3 como proyecto destacado en la sección `Projects`. Implementado y validado (lint/typecheck/build en verde), pendiente de revisión visual final del usuario antes de commitear — ver detalle en la sesión de abajo. No afecta a este repositorio.
+1. **Pendiente de aprobación del usuario (fuera de este repo):** commit en el portfolio (`D:\miler-portfolio-final\miler-portfolio`, repo separado) que presenta FinanceApi v3 como proyecto destacado en la sección `Projects`. Implementado y validado (lint/typecheck/build en verde), pendiente de revisión visual final del usuario antes de commitear — ver detalle en la sesión de abajo. No afecta a este repositorio. Los 3 screenshots que usa ese componente (`financeapi-dashboard.jpg`, etc.) quedaron desactualizados tras el rediseño de la Cabina (sesión 2026-09-11) y conviene recapturarlos antes de publicar el portfolio.
 2. Pendientes de auditoría de seguridad ya documentados y no bloqueantes para portafolio: Swagger `/docs` público, `deactivate()` sin el mismo chequeo de auto-acción que `updateRole`, 6 vulnerabilidades moderate de `@nestjs/core`, `npm audit` no automatizado en CI.
-3. Fuera de eso, nada pendiente en este repo — quedó cerrado para portafolio en la sesión de 2026-09-10: working tree limpio, `feat/finance-api-complete` pusheada y sincronizada con `origin`, `V2` intacta.
+3. Fuera de eso, nada pendiente en este repo — `feat/finance-api-complete` pusheada y sincronizada con `origin` tras la sesión 2026-09-11, `V2` intacta.
 
 ## Notas importantes
 
 - Los widgets "Pronto" del dashboard son una decisión de alcance deliberada, no un faltante: quedan como roadmap/post-MVP.
 - `apps/api/package-lock.json` y `apps/web/package-lock.json` quedan fuera del repositorio por decisión explícita del usuario.
+
+## Cierre de sesión (2026-09-11) — nueva paleta de colores + rediseño completo de la Cabina
+
+**Objetivo:** reemplazar la paleta de colores de todo el flujo (login → Cabina) y rediseñar por completo la vista Cabina según un mockup provisto por el usuario (`Cabina Carbón.dc.html`, dirección "Premium Dark / Console" con accent azul `#5BA3D0`, verde `#4FA97E`, rojo `#C9636E`), sin tocar maquetación de otras pantallas ni lógica de negocio fuera de lo necesario para alimentar los widgets nuevos con datos reales.
+
+**Paleta (`apps/web/app/globals.css`):** reemplazo total de los tokens de color en `:root` y `.dark` — de la escala púrpura/blurple anterior ("Cabina" 2C) a la nueva familia carbón + azul de dato + verde/ámbar/rojo semánticos. Mismos nombres de token que ya consumían `status-badge.tsx` y el resto de la app, así que ningún componente cambió su código, solo el valor de las variables. Verificado que no queda ningún color hardcodeado (hex ni clases Tailwind tipo `bg-red-500`) fuera de `globals.css`.
+
+**Rediseño de la Cabina (`apps/web/app/dashboard/page.tsx`):** los 6 widgets anteriores (Salud financiera, Caja proyectada, Concentración del ingreso, Requiere atención, Próximos movimientos, Actividad) se reemplazaron por los 5 del mockup: **Por cobrar** (monto + sparkline + desglose vencido/por vencer/cobrado + tendencia vs. período anterior), **Flujo esperado** (línea de vencimientos agrupados por mes), **Riesgo de cartera** (concentración + antigüedad del vencido + peor cliente), **Pipeline del período** (presupuestado → facturado → cobrado → vencido + conversión) y **Actividad reciente** (con badges por estado real). Los gráficos son SVG propios (sparkline/área/donuts/funnel decorativo) coloreados con los tokens del tema, no una librería — se re-temizan solos entre claro/oscuro.
+
+**Backend (`apps/api/src/dashboard/dashboard.service.ts`):** `GET /dashboard/stats` extendido con agregaciones nuevas y reales (nada inventado en el cliente): `receivable` (vencido/por vencer/cobrado + tendencia vs. período anterior de igual longitud + sparkline de actividad facturada), `cashFlowForecast` (vencido + próximos vencimientos agrupados por mes), `portfolioRisk` (concentración, % vencido +30 días, distribución de clientes, antigüedad en 4 buckets, peor cliente con su factura más vieja) y `pipeline` (presupuestado/facturado/cobrado/vencido + conversión). Se agregó `UserDetails` a los queries de cliente para mostrar iniciales reales (`clientInitials()`, con fallback al id si el cliente no cargó perfil) en vez de solo el id truncado. `dashboard.service.spec.ts` actualizado con 2 casos nuevos (pipeline, concentración/riesgo) — 78/78 tests en verde.
+
+**Dato real registrado (no fabricado en UI):** el gráfico "Flujo esperado" mostraba una línea recta porque solo había 2 puntos de datos (las 3 únicas facturas por vencer del dataset QA caían todas en septiembre). Con aprobación explícita del usuario, se crearon 2 facturas QA nuevas vía API (`qa.cliente2` USD 380.00 vence 02/10, `qa.cliente3` USD 265.00 vence 09/10) para que el bucketing por mes genere un tercer punto real (octubre). **Nota importante:** esto escribió filas reales en la misma base de Supabase que usa producción (el `.env` local de `apps/api` apunta a ese mismo proyecto, ya documentado en la sesión 2026-09-09) — no es un sandbox aislado.
+
+**Validado (ejecutado de verdad):**
+- `apps/api`: `tsc --noEmit` ✅, `eslint --fix` ✅ sin issues, `npm test` → 78/78 (antes 76 + 2 nuevos), `npm run build` ✅.
+- `apps/web`: `tsc --noEmit` ✅, `eslint` ✅ sin issues, `npm run build` ✅ compila y prerenderiza 23 rutas.
+- QA visual en navegador real (Chrome, sesión `qa.owner`): Login y Cabina en los 3 períodos (Mes/Trimestre/Año) y ambos temas (claro/oscuro), sin errores de consola. Verificado que el gráfico de flujo pasó de línea recta a curva real tras las 2 facturas nuevas.
+
+**Commit:** `d44dd15` ("Actualización final") — pusheado a `origin/feat/finance-api-complete` (`13543af..d44dd15`). Archivos: `apps/web/app/globals.css`, `apps/web/app/dashboard/page.tsx`, `apps/api/src/dashboard/dashboard.service.ts`, `apps/api/src/dashboard/dashboard.service.spec.ts`. `Dashboard - Auditoría y Conceptos.dc.html` se dejó fuera del commit (sin trackear a propósito, ver Notas importantes).
+
+**Pendiente para la próxima sesión:** ninguno bloqueante en este repo. Si se retoma el tema del portfolio (punto 1 de "Próximo objetivo"), sus 3 screenshots quedaron desactualizados frente a la Cabina nueva.
 
 ## Cierre de sesión (2026-09-10) — FinanceApi v3 destacado en el portfolio (repo externo, sin commitear)
 
