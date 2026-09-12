@@ -3,128 +3,129 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* FinanceApi — dirección "Cabina" (2C).
-   Identidad basada en neutros azul-grisáceos + un único accent blurple. El
-   accent aparece como línea, marca y punto de dato; nunca como fondo de un
-   área grande. El verde de la dirección anterior se retiró por completo:
-   no queda ningún token que lo referencie. */
+/* FinanceApi — dirección "Cabina Carbón".
+   Reemplaza por completo la dirección "2C" (blurple). Identidad basada en
+   carbón + un accent azul de dato (línea, ícono, foco, link) y dos
+   semánticos de dominio con hue propio (verde cobrado, ámbar pendiente,
+   rojo vencido) en vez de reusar el mismo tono para todo. No queda ningún
+   token que referencie la escala púrpura anterior. */
 :root {
   --radius: 0.625rem;
   color-scheme: light;
 
-  --background: #ECEEF8;
-  --foreground: #292B31;
+  --background: #F5F7FA;
+  --foreground: #1C2126;
 
   /* Escala de superficies. La elevación en este sistema es borde + oscuridad
      ambiente, no sombra dura, así que cada nivel se distingue por valor. */
-  --card: #F7F8FD;
-  --card-foreground: #292B31;
-  --surface-2: #E4E7F5;
-  --inset: #F2F3FA;
+  --card: #FFFFFF;
+  --card-foreground: #1C2126;
+  --surface-2: #E7ECF2;
+  --inset: #EFF2F6;
 
-  --popover: #F7F8FD;
-  --popover-foreground: #292B31;
+  --popover: #FFFFFF;
+  --popover-foreground: #1C2126;
 
-  --primary: #5D5294;
-  --primary-foreground: #F3F2FE;
+  --primary: #2E6C93;
+  --primary-foreground: #F5FAFD;
 
-  --secondary: #E4E7F5;
-  --secondary-foreground: #292B31;
+  --secondary: #E7ECF2;
+  --secondary-foreground: #1C2126;
 
-  --muted: #E4E7F5;
-  --muted-foreground: #595D6C;
+  --muted: #E7ECF2;
+  --muted-foreground: #5B6472;
 
-  --accent: #E7E5FE;
-  --accent-foreground: #4D4384;
+  --accent: #E3EEF7;
+  --accent-foreground: #1F5A80;
   /* Borde del estado activo: un paso más de croma que --border, para que el
      ítem activo del sidebar se lea sin necesidad de un bloque de fondo. */
-  --accent-edge: #B5ABFC;
+  --accent-edge: #A9CFE4;
 
-  --destructive: #A15B55;
+  --destructive: #9C4A50;
   --destructive-foreground: #FDF3F2;
 
-  --border: #CFD3E5;
-  --line-soft: #DFE2EF;
-  --input: #CFD3E5;
-  --ring: #5D5294;
+  --border: #D8DEE6;
+  --line-soft: #E2E7EE;
+  --input: #D8DEE6;
+  --ring: #2E6C93;
 
   /* Semánticos de dominio. Se mantienen los mismos nombres que ya consume
      status-badge.tsx — solo cambian los valores, así que ese componente
      sigue funcionando sin tocarlo.
-     cobrado -> accent · pendiente -> arcilla · informativo -> neutro */
-  --success: #4D4384;
-  --success-foreground: #F3F2FE;
-  --success-bg: #E7E5FE;
-  --warning: #A15B55;
-  --warning-foreground: #FDF3F2;
-  --warning-bg: #F7E6E4;
-  --info: #595D6C;
-  --info-foreground: #F7F8FD;
-  --info-bg: #E4E7F5;
+     cobrado -> verde · pendiente -> ámbar · vencido/cancelado -> rojo */
+  --success: #2E7D5B;
+  --success-foreground: #F1FAF5;
+  --success-bg: #E3F3EA;
+  --warning: #B5651D;
+  --warning-foreground: #FDF6EF;
+  --warning-bg: #F7E9D9;
+  --info: #2E6C93;
+  --info-foreground: #F5FAFD;
+  --info-bg: #E3EEF7;
 
-  /* Rampa de series para gráficos: pasos del accent, no cinco matices
-     distintos. El orden es el del ranking (mayor -> menor). */
-  --chart-1: #4D4384;
-  --chart-2: #5D5294;
-  --chart-3: #796CBF;
-  --chart-4: #9184D9;
-  --chart-5: #B5ABFC;
-  --chart-rest: #B2B6CA;
+  /* Rampa de series para gráficos: pasos del accent azul, no cinco matices
+     arbitrarios. El orden es el del ranking (mayor -> menor). */
+  --chart-1: #2E6C93;
+  --chart-2: #4A8CB5;
+  --chart-3: #7CADCE;
+  --chart-4: #A9CFE4;
+  --chart-5: #CFE3F0;
+  --chart-rest: #C7CDD6;
 }
 
 .dark {
   color-scheme: dark;
 
-  --background: #12131F;
-  --foreground: #E9E9ED;
+  --background: #080808;
+  --foreground: #FFFFFF;
 
-  --card: #1B1D2B;
-  --card-foreground: #E9E9ED;
-  --surface-2: #232532;
-  --inset: #161826;
+  --card: #0C0C0C;
+  --card-foreground: #FFFFFF;
+  --surface-2: #141414;
+  --inset: #0A0A0A;
 
-  --popover: #232532;
-  --popover-foreground: #E9E9ED;
+  --popover: #111111;
+  --popover-foreground: #FFFFFF;
 
-  --primary: #9184D9;
-  --primary-foreground: #12131F;
+  --primary: #5BA3D0;
+  --primary-foreground: #071019;
 
-  --secondary: #232532;
-  --secondary-foreground: #E9E9ED;
+  --secondary: #151515;
+  --secondary-foreground: #E6E6E6;
 
-  --muted: #232532;
-  --muted-foreground: #9397AB;
+  --muted: #141414;
+  --muted-foreground: #8E8E8E;
 
-  --accent: #2B2741;
-  --accent-foreground: #D2CEFD;
-  --accent-edge: #423A6A;
+  --accent: #15171C;
+  --accent-foreground: #FFFFFF;
+  --accent-edge: #1F242E;
 
-  --destructive: #C98B86;
-  --destructive-foreground: #12131F;
+  --destructive: #C9636E;
+  --destructive-foreground: #0A0A0A;
 
-  --border: #2E3140;
-  --line-soft: #292B31;
-  --input: #2E3140;
-  --ring: #9184D9;
+  --border: #1A1A1A;
+  --line-soft: #1F1F1F;
+  --input: #232323;
+  --ring: #5BA3D0;
 
-  --success: #B5ABFC;
-  --success-foreground: #12131F;
-  --success-bg: #2B2741;
-  --warning: #C98B86;
-  --warning-foreground: #12131F;
-  --warning-bg: #3A2A2A;
-  --info: #9397AB;
-  --info-foreground: #12131F;
-  --info-bg: #232532;
+  --success: #4FA97E;
+  --success-foreground: #0A0A0A;
+  --success-bg: #142A21;
+  --warning: #E0832C;
+  --warning-foreground: #0A0A0A;
+  --warning-bg: #2E2015;
+  --info: #5BA3D0;
+  --info-foreground: #0A0A0A;
+  --info-bg: #1C2530;
 
-  /* En dark la rampa se invierte: los pasos claros quedan al frente para
-     mantener el mismo peso visual sobre fondo oscuro. */
-  --chart-1: #5D5294;
-  --chart-2: #796CBF;
-  --chart-3: #9184D9;
-  --chart-4: #B5ABFC;
-  --chart-5: #CFD3E5;
-  --chart-rest: #3F424D;
+  /* En dark la rampa son pasos del mismo azul (nunca colores arbitrarios
+     por serie): más saturado/claro adelante, más apagado atrás. */
+  --chart-1: #5BA3D0;
+  --chart-2: #3F7396;
+  --chart-3: #2E4A5C;
+  --chart-4: #8FC3E3;
+  --chart-5: #C4E0F0;
+  --chart-rest: #2B2B2B;
 }
 
 @theme inline {
