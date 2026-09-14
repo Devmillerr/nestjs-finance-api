@@ -63,7 +63,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     heading: null,
     items: [
-      { href: '/dashboard', label: 'Cabina', icon: Gauge, permission: 'READ_INVOICE' },
+      { href: '/dashboard', label: 'Resumen', icon: Gauge, permission: 'READ_INVOICE' },
     ],
   },
   {
@@ -132,14 +132,14 @@ export function navTitleFor(pathname: string): { title: string; subtitle?: strin
   const exact = NAV_ITEMS.find((i) => i.href === pathname);
   if (exact) {
     return exact.href === '/dashboard'
-      ? { title: 'Cabina', subtitle: 'Resumen de la posición financiera' }
+      ? { title: 'Resumen', subtitle: 'Posición financiera' }
       : { title: exact.label };
   }
   // Rutas de detalle (/dashboard/invoices/[id]): hereda el título de su sección.
   const parent = NAV_ITEMS.filter((i) => i.href !== '/dashboard').find((i) =>
     pathname.startsWith(`${i.href}/`),
   );
-  return parent ? { title: parent.label } : { title: 'Cabina' };
+  return parent ? { title: parent.label } : { title: 'Resumen' };
 }
 
 export interface NavViewer {
