@@ -2,13 +2,14 @@
 
 ## Fecha de última actualización
 
-2026-09-11
+2026-09-14
 
 ## Estado general
 
 - Backend: 🟢 Cerrado. `GET /dashboard/stats` extendido (ver sesión 2026-09-11) con agregaciones nuevas para la Cabina rediseñada.
-- Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado. Paleta de colores y vista Cabina rediseñadas por completo (ver sesión 2026-09-11).
-- Todo el trabajo está commiteado y publicado. La rama `feat/finance-api-complete` fue pusheada correctamente a `origin` y está al día (`up to date with 'origin/feat/finance-api-complete'`). Proyecto publicado y sincronizado.
+- Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado. Paleta de colores y vista Cabina rediseñadas por completo (sesión 2026-09-11). Login rediseñado por completo con paleta propia carbón + verde menta (ver sesión 2026-09-14).
+- **Pendiente de commit:** el rediseño de `/login` (sesión 2026-09-14, ver abajo) está implementado y validado en este working tree, pero todavía no commiteado — a la espera de tu aprobación explícita (regla del proyecto: mostrar diff/archivos antes de `git add`/`commit`).
+- Hasta la sesión 2026-09-11, todo el trabajo estaba commiteado y publicado. La rama `feat/finance-api-complete` fue pusheada correctamente a `origin` y está al día (`up to date with 'origin/feat/finance-api-complete'`).
 - La rama `V2` permanece intacta en `origin`; ambas historias (`feat/finance-api-complete` y `V2`) siguen sin ancestro común (`git merge-base` no encuentra base compartida).
 
 ## Etapas
@@ -75,6 +76,24 @@ Validado tras los 13 commits: `apps/api` (`tsc --noEmit`, `lint`, `build`, `test
 1. **Pendiente de aprobación del usuario (fuera de este repo):** commit en el portfolio (`D:\miler-portfolio-final\miler-portfolio`, repo separado) que presenta FinanceApi v3 como proyecto destacado en la sección `Projects`. Implementado y validado (lint/typecheck/build en verde), pendiente de revisión visual final del usuario antes de commitear — ver detalle en la sesión de abajo. No afecta a este repositorio. Los 3 screenshots que usa ese componente (`financeapi-dashboard.jpg`, etc.) quedaron desactualizados tras el rediseño de la Cabina (sesión 2026-09-11) y conviene recapturarlos antes de publicar el portfolio.
 2. Pendientes de auditoría de seguridad ya documentados y no bloqueantes para portafolio: Swagger `/docs` público, `deactivate()` sin el mismo chequeo de auto-acción que `updateRole`, 6 vulnerabilidades moderate de `@nestjs/core`, `npm audit` no automatizado en CI.
 3. Fuera de eso, nada pendiente en este repo — `feat/finance-api-complete` pusheada y sincronizada con `origin` tras la sesión 2026-09-11, `V2` intacta.
+
+## Cierre de sesión (2026-09-14) — rediseño completo de `/login` (split screen, paleta carbón + verde menta)
+
+**Objetivo:** reemplazar por completo `apps/web/app/login/page.tsx` por un diseño final aprobado por el usuario (mockup `.dc.html` provisto en `Descargas\Rediseño de página de login con paleta oscura\Login FinanceApi.dc.html`): layout de pantalla dividida (panel de marca + formulario), fondo negro carbón (`#0D0D0D`/`#0A0B0A`), acento verde menta (`#00F59B`), botón de Google ajustado (outline oscuro), botón principal "Iniciar sesión" en estilo outline negro con borde/texto verde, toggle de mostrar/ocultar contraseña, checkbox "Mantener la sesión abierta" y link "¿La olvidaste?".
+
+**Decisión de paleta:** los colores del login quedan hardcodeados (Tailwind arbitrary values / inline style) en vez de usar los tokens `--primary` etc. de `globals.css`, porque el tema oscuro global de la app es azul (`#5BA3D0`, dirección "Cabina Carbón" de la sesión 2026-09-11) y el login usa deliberadamente su propia paleta verde menta — es "el único momento oscuro" del producto, no debía tocar el tema del dashboard. No se modificó `globals.css`.
+
+**Tipografía:** se mantuvieron las fuentes ya cargadas en la app (`font-sans` → Inter, `font-mono` → IBM Plex Mono para las etiquetas en mayúscula) en vez de las Space Grotesk/JetBrains Mono del mockup, para no sumar una carga de Google Fonts nueva y mantener consistencia con el resto de la app.
+
+**Funcionalidad real conectada (no es un mockup estático):** el formulario sigue usando `useAuth().login(email, password)` + `router.push('/dashboard')` + manejo de error/loading igual que antes; el botón "Continuar con Google" queda visual únicamente (`onClick` no-op) porque no existe integración de Google OAuth en el backend — no se inventó ninguna.
+
+**Validado (ejecutado de verdad):**
+- `apps/web`: `tsc --noEmit` ✅ sin errores, `eslint app/login/page.tsx` ✅ sin issues, `npm run build` ✅ compila y prerenderiza 23 rutas.
+- QA visual en navegador real (`npm run dev`, Chrome vía `claude-in-chrome`): `/login` renderiza igual al mockup aprobado, sin errores de consola. **No verificado:** el stacking en viewport mobile real — `resize_window` no logró achicar el viewport en este entorno (misma limitación ya documentada en la sesión 2026-09-08); el CSS (`grid grid-cols-1 lg:grid-cols-2`) debería apilar el panel de marca sobre el formulario por debajo de 1024px, pero no se vio confirmado visualmente.
+
+**Canvas de diseño publicado (fuera de este repo, como referencia visual):** el mockup se sembró y publicó como Design canvas en `https://claude.ai/artifact/WBChswor2wPohReqSNCTTX` para previsualización/exportación PNG-PDF.
+
+**Sin commitear:** cambio hecho únicamente en el working tree (`apps/web/app/login/page.tsx`); a la espera de aprobación explícita del usuario antes de `git add`/`commit`, según la regla de Git del proyecto.
 
 ## Notas importantes
 
