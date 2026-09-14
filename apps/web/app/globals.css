@@ -45,7 +45,6 @@
   --destructive-foreground: #FDF3F2;
 
   --border: #D8DEE6;
-  --line-soft: #E2E7EE;
   --input: #D8DEE6;
   --ring: #2E6C93;
 
@@ -76,39 +75,46 @@
 .dark {
   color-scheme: dark;
 
-  --background: #080808;
+  /* Dirección "Premium Dark" (2026-09-14): reemplaza el accent azul de
+     "Cabina Carbón" por el verde esmeralda ya establecido en /login, para que
+     todo el modo oscuro del producto (no solo la puerta de entrada) comparta
+     una sola identidad. El azul (--info) se conserva como color de dato
+     secundario, no como accent principal. */
+  --background: #0A0A0B;
   --foreground: #FFFFFF;
 
-  --card: #0C0C0C;
+  --card: #141416;
   --card-foreground: #FFFFFF;
-  --surface-2: #141414;
-  --inset: #0A0A0A;
+  --surface-2: #1F1F23;
+  --inset: #0F0F11;
 
-  --popover: #111111;
+  --popover: #141416;
   --popover-foreground: #FFFFFF;
 
-  --primary: #5BA3D0;
-  --primary-foreground: #071019;
+  --primary: #00F59B;
+  --primary-foreground: #0A0A0A;
 
-  --secondary: #151515;
+  --secondary: #1C1C1F;
   --secondary-foreground: #E6E6E6;
 
-  --muted: #141414;
-  --muted-foreground: #8E8E8E;
+  --muted: #1C1C1F;
+  --muted-foreground: #A1A1AA;
 
-  --accent: #15171C;
+  --accent: #1F1F23;
   --accent-foreground: #FFFFFF;
-  --accent-edge: #1F242E;
+  --accent-edge: #2E2E33;
 
-  --destructive: #C9636E;
+  --destructive: #FF6B6B;
   --destructive-foreground: #0A0A0A;
 
-  --border: #1A1A1A;
-  --line-soft: #1F1F1F;
-  --input: #232323;
-  --ring: #5BA3D0;
+  --border: #232326;
+  --input: #232326;
+  --ring: #00F59B;
 
-  --success: #4FA97E;
+  /* Cobrado reusa el mismo verde que --primary a propósito (dirección
+     "Premium Dark"): un solo acento para marca + éxito, en vez de dos verdes
+     distintos que compitan entre sí. */
+  --success: #00F59B;
   --success-foreground: #0A0A0A;
   --success-bg: #142A21;
   --warning: #E0832C;
@@ -147,7 +153,6 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
-  --color-line-soft: var(--line-soft);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-surface-2: var(--surface-2);
@@ -189,19 +194,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Regla que se desvanece en los extremos en lugar de cortar en seco. Es el
-   separador por defecto dentro de las tarjetas de la Cabina. */
-.rule-fade {
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--line-soft) 32px,
-    var(--line-soft) calc(100% - 32px),
-    transparent
-  );
-}
-
 /* Foco de teclado tematizado: nunca el anillo azul del navegador. */
 :focus-visible {
   outline: 2px solid var(--ring);
@@ -220,6 +212,24 @@ body {
 :root {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Entrada sutil para tarjetas/gráficos/filas al montar la pantalla (no al
+   re-renderizar con datos nuevos: es solo la animación inicial, `both`
+   conserva el estado final). Respeta prefers-reduced-motion vía la regla de
+   abajo, que ya neutraliza animation-duration global. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s var(--ease-out) both;
 }
 
 /* Reduced motion no es "cero feedback", es una versión más suave: se
