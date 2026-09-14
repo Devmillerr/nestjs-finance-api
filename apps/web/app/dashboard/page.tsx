@@ -63,7 +63,7 @@ interface DashboardStats {
 }
 
 // Separa "48,320.00" en ["48,320", "00"] para el número grande con los
-// centavos en tamaño menor (mismo tratamiento tipográfico en todo "Cabina").
+// centavos en tamaño menor (mismo tratamiento tipográfico en todo "Resumen").
 function splitAmount(cents: number): [string, string] {
   const formatted = (Math.abs(cents) / 100).toLocaleString('es-PE', {
     minimumFractionDigits: 2,
@@ -155,8 +155,8 @@ function activityPresentation(entry: DashboardStats['recentActivity'][number], n
   if (entry.paymentStatus === 'COMPLETED') {
     return {
       badge: 'Cobrado',
-      badgeClass: 'bg-success-bg text-success',
-      iconClass: 'bg-success-bg text-success',
+      badgeClass: 'bg-success/10 text-success',
+      iconClass: 'bg-success/10 text-success',
       amountClass: 'text-success',
       amountPrefix: '+',
       sub: `Cobro recibido · ${formatDate(entry.createdAt)}`,
@@ -185,7 +185,7 @@ function activityPresentation(entry: DashboardStats['recentActivity'][number], n
   }
   return {
     badge: 'Pendiente',
-    badgeClass: 'bg-info-bg text-info',
+    badgeClass: 'bg-info/10 text-info',
     iconClass: 'bg-muted text-muted-foreground',
     amountClass: 'text-foreground',
     amountPrefix: '',
@@ -269,7 +269,7 @@ export default function DashboardPage() {
             </div>
             <Link
               href="/dashboard/invoices/new"
-              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-[13px] font-medium text-primary-foreground transition-[background-color,transform] duration-150 ease-[var(--ease-out)] hover:scale-[1.02] hover:bg-primary/90"
             >
               <Plus size={14} strokeWidth={2} />
               Nueva factura
@@ -285,7 +285,7 @@ export default function DashboardPage() {
 
         <div className="mb-3 grid grid-cols-1 gap-3 lg:grid-cols-[4fr_5fr]">
           {/* Por cobrar */}
-          <section className="rounded-2xl border border-border bg-card p-5">
+          <section className="rounded-2xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-5">
             {loading ? (
               <Skeleton className="h-40 w-full" />
             ) : (
@@ -295,7 +295,6 @@ export default function DashboardPage() {
                     <p className="font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
                       Por cobrar
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">USD</p>
                   </div>
                   {stats.receivable.trendPct !== null && (
                     <div className="ml-auto text-right">
@@ -303,15 +302,12 @@ export default function DashboardPage() {
                         className={
                           'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold ' +
                           (stats.receivable.trendPct >= 0
-                            ? 'bg-success-bg text-success'
+                            ? 'bg-success/10 text-success'
                             : 'bg-destructive/10 text-destructive')
                         }
                       >
                         {stats.receivable.trendPct >= 0 ? '↑' : '↓'} {Math.abs(stats.receivable.trendPct)}%
                       </span>
-                      <p className="mt-1.5 text-[11.5px] text-muted-foreground">
-                        vs. {PERIOD_LABELS[period].toLowerCase()} anterior
-                      </p>
                     </div>
                   )}
                 </div>
@@ -341,7 +337,8 @@ export default function DashboardPage() {
                     <span className="mt-1.5 size-2 shrink-0 rounded-full bg-destructive" />
                     <div>
                       <p className="font-mono text-[19px] font-semibold tracking-tight tabular-nums text-destructive">
-                        {(stats.receivable.overdueCents / 100).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                        {splitAmount(stats.receivable.overdueCents)[0]}
+                        <span className="text-muted-foreground/70">.{splitAmount(stats.receivable.overdueCents)[1]}</span>
                       </p>
                       <p className="font-mono text-[11px] tracking-[0.12em] text-muted-foreground uppercase">Vencido</p>
                     </div>
@@ -350,7 +347,8 @@ export default function DashboardPage() {
                     <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />
                     <div>
                       <p className="font-mono text-[19px] font-semibold tracking-tight tabular-nums">
-                        {(stats.receivable.upcomingCents / 100).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                        {splitAmount(stats.receivable.upcomingCents)[0]}
+                        <span className="text-muted-foreground/70">.{splitAmount(stats.receivable.upcomingCents)[1]}</span>
                       </p>
                       <p className="font-mono text-[11px] tracking-[0.12em] text-muted-foreground uppercase">Por vencer</p>
                     </div>
@@ -359,7 +357,8 @@ export default function DashboardPage() {
                     <span className="mt-1.5 size-2 shrink-0 rounded-full bg-success" />
                     <div>
                       <p className="font-mono text-[19px] font-semibold tracking-tight tabular-nums text-success">
-                        {(stats.receivable.collectedCents / 100).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                        {splitAmount(stats.receivable.collectedCents)[0]}
+                        <span className="text-muted-foreground/70">.{splitAmount(stats.receivable.collectedCents)[1]}</span>
                       </p>
                       <p className="font-mono text-[11px] tracking-[0.12em] text-muted-foreground uppercase">Cobrado</p>
                     </div>
@@ -370,13 +369,12 @@ export default function DashboardPage() {
           </section>
 
           {/* Flujo esperado */}
-          <section className="rounded-2xl border border-border bg-card p-5">
+          <section className="rounded-2xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-5">
             {loading ? (
               <Skeleton className="h-40 w-full" />
             ) : stats.cashFlowForecast.buckets.length === 0 ? (
               <>
                 <h2 className="text-[15px] font-semibold">Flujo esperado</h2>
-                <p className="mt-1 text-xs text-muted-foreground">¿cuándo entra lo que me deben?</p>
                 <div className="mt-4">
                   <EmptyState title="Nada por cobrar" description="No hay facturas vencidas ni por vencer en los próximos 30 días." />
                 </div>
@@ -386,7 +384,6 @@ export default function DashboardPage() {
                 <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
                   <div>
                     <h2 className="text-[15px] font-semibold">Flujo esperado</h2>
-                    <p className="mt-1 text-xs text-muted-foreground">¿cuándo entra lo que me deben?</p>
                   </div>
                   {stats.cashFlowForecast.nextCutoff && (
                     <p className="ml-auto text-[12.5px] text-muted-foreground">
@@ -430,33 +427,48 @@ export default function DashboardPage() {
                       />
                     ))}
                   </svg>
-                  <div className="absolute inset-0 flex pointer-events-none">
-                    {stats.cashFlowForecast.buckets.map((b, i) => (
-                      <div key={i} className="flex flex-1 items-start justify-center pt-1">
+                  {/* Posicionado con las mismas coordenadas x/y que buildLinePath calculó
+                      para el punto -- no columnas flex repartidas a partes iguales, que
+                      quedaban desalineadas del punto real apenas los buckets no eran
+                      simétricos (viewBox 400x130, pad=12: ver buildLinePath arriba). */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {stats.cashFlowForecast.buckets.map((b, i) => {
+                      const p = forecast.points[i];
+                      if (!p) return null;
+                      return (
                         <span
-                          className={
-                            'font-mono text-xs ' + (b.overdue ? 'text-destructive' : 'text-muted-foreground')
-                          }
+                          key={i}
+                          className="absolute font-mono text-xs text-foreground"
+                          style={{
+                            left: `${(p.x / 400) * 100}%`,
+                            top: `${(p.y / 130) * 100}%`,
+                            transform: 'translate(-50%, calc(-100% - 8px))',
+                          }}
                         >
                           {(b.dueCents / 100).toLocaleString('es-PE', { maximumFractionDigits: 0 })}
                         </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
-                <div className="mt-2 flex">
-                  {stats.cashFlowForecast.buckets.map((b, i) => (
-                    <p
-                      key={i}
-                      className={
-                        'flex-1 text-center font-mono text-[11px] tracking-[0.14em] uppercase ' +
-                        (b.overdue ? 'text-destructive' : i === 0 ? 'text-foreground' : 'text-muted-foreground')
-                      }
-                    >
-                      {b.label}
-                    </p>
-                  ))}
+                <div className="relative mt-2 h-[15px]">
+                  {stats.cashFlowForecast.buckets.map((b, i) => {
+                    const p = forecast.points[i];
+                    if (!p) return null;
+                    return (
+                      <p
+                        key={i}
+                        className={
+                          'absolute font-mono text-[11px] tracking-[0.14em] uppercase ' +
+                          (b.overdue ? 'text-destructive' : i === 0 ? 'text-foreground' : 'text-muted-foreground')
+                        }
+                        style={{ left: `${(p.x / 400) * 100}%`, transform: 'translateX(-50%)' }}
+                      >
+                        {b.label}
+                      </p>
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -465,7 +477,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1.1fr]">
           {/* Riesgo de cartera */}
-          <section className="rounded-2xl border border-border bg-card p-5">
+          <section className="rounded-2xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-5">
             <h2 className="text-[15px] font-semibold">Riesgo de cartera</h2>
             <p className="mt-1 text-xs text-muted-foreground">concentración, antigüedad y exposición</p>
 
@@ -564,9 +576,9 @@ export default function DashboardPage() {
             )}
           </section>
 
-          {/* Pipeline del trimestre */}
-          <section className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="text-[15px] font-semibold">Pipeline del período</h2>
+          {/* Flujo de facturación */}
+          <section className="rounded-2xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-5">
+            <h2 className="text-[15px] font-semibold">Flujo de facturación</h2>
             <p className="mt-1 text-xs text-muted-foreground">del presupuesto al cobro</p>
 
             {loading ? (
@@ -644,7 +656,7 @@ export default function DashboardPage() {
           </section>
 
           {/* Actividad reciente */}
-          <section className="rounded-2xl border border-border bg-card py-4">
+          <section className="rounded-2xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] py-4">
             <div className="flex items-baseline gap-3 px-5">
               <div>
                 <h2 className="text-[15px] font-semibold">Actividad reciente</h2>
