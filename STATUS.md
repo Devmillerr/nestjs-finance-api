@@ -7,8 +7,8 @@
 ## Estado general
 
 - Backend: 🟢 Cerrado. `GET /dashboard/stats` extendido (ver sesión 2026-09-11) con agregaciones nuevas para la Cabina rediseñada.
-- Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado. Paleta de colores y vista Cabina rediseñadas por completo (sesión 2026-09-11). Login rediseñado por completo con paleta propia carbón + verde menta (ver sesión 2026-09-14).
-- **Pendiente de commit:** el rediseño de `/login` (sesión 2026-09-14, ver abajo) está implementado y validado en este working tree, pero todavía no commiteado — a la espera de tu aprobación explícita (regla del proyecto: mostrar diff/archivos antes de `git add`/`commit`).
+- Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado. **Dirección visual "Premium Dark" consolidada en toda la app** (sesión 2026-09-14): mismo accent verde esmeralda del login ahora propagado al modo oscuro completo (Resumen/ex-Cabina + Facturas + Presupuestos + Compras + Contratos + Productos + Servicios + Usuarios) vía tokens centrales, no por archivo.
+- **Pendiente de commit:** el rediseño "Premium Dark" (sesión 2026-09-14, ver abajo) está implementado y validado en este working tree, pero todavía no commiteado — a la espera de tu aprobación explícita (regla del proyecto: mostrar diff/archivos antes de `git add`/`commit`). El rediseño de `/login` (commit `ace7c7a`, sesión anterior) ya está commiteado.
 - Hasta la sesión 2026-09-11, todo el trabajo estaba commiteado y publicado. La rama `feat/finance-api-complete` fue pusheada correctamente a `origin` y está al día (`up to date with 'origin/feat/finance-api-complete'`).
 - La rama `V2` permanece intacta en `origin`; ambas historias (`feat/finance-api-complete` y `V2`) siguen sin ancestro común (`git merge-base` no encuentra base compartida).
 
@@ -94,6 +94,82 @@ Validado tras los 13 commits: `apps/api` (`tsc --noEmit`, `lint`, `build`, `test
 **Canvas de diseño publicado (fuera de este repo, como referencia visual):** el mockup se sembró y publicó como Design canvas en `https://claude.ai/artifact/WBChswor2wPohReqSNCTTX` para previsualización/exportación PNG-PDF.
 
 **Sin commitear:** cambio hecho únicamente en el working tree (`apps/web/app/login/page.tsx`); a la espera de aprobación explícita del usuario antes de `git add`/`commit`, según la regla de Git del proyecto.
+
+## Cierre de sesión (2026-09-14) — dirección "Premium Dark" propagada a toda la app + rediseño de "Resumen" (ex-Cabina)
+
+**Objetivo:** reemplazar la dirección "Cabina Carbón" (accent azul, sesión 2026-09-11) por "Premium Dark" (accent verde esmeralda `#00F59B`, ya establecido en `/login`), y que TODO el modo oscuro de la app — no solo el login — comparta una sola identidad. Referencia visual: mockup local `Dashboard styling con referencia visual\Cabina Carbón.dc.html` (fondo `#0A0A0B`, tarjetas `#141416`, borde `#232326`, texto secundario `#A1A1AA`).
+
+**Decisión de alcance (no pedida explícitamente, asumida por consistencia con lo ya construido):** se actualizaron los tokens del tema **oscuro** (`.dark` en `globals.css`), no se tocó el tema claro ni se eliminó el toggle claro/oscuro (`ThemeProvider`, ya shippeado en Etapa 1). El tema por defecto de la app ya es oscuro salvo que el sistema operativo pida explícitamente claro, así que esto alcanza a la enorme mayoría de sesiones sin remover una feature aprobada. Si en realidad se quería eliminar el tema claro por completo, decirlo para una sesión aparte.
+
+**Estrategia técnica — tokens + componentes compartidos, no archivo por archivo:** la app ya tenía una arquitectura de theming centralizada (`--primary`, `--card`, `--border`, `--muted-foreground`, etc. en `globals.css`, consumidos vía clases Tailwind `bg-card`/`text-primary`/etc. en todos lados) y componentes compartidos (`Button`, `Table`, `StatusBadge`, `RoleBadge`, `SidebarNavGroups`) ya reutilizados por las 7 secciones. Por eso este cambio se hizo casi enteramente editando un puñado de archivos centrales — no 20 vistas por separado:
+
+- **`apps/web/app/globals.css`:** `.dark` reemplazado — `--primary`/`--ring`/`--success` pasan de azul (`#5BA3D0`) a verde (`#00F59B`, el mismo verde ya usado en `/login`; cobrado reusa el mismo tono que el accent de marca, a propósito), `--background`/`--card`/`--border`/`--muted-foreground`/etc. actualizados a los valores exactos del mockup. El tema claro no se tocó. Se agregó `.animate-fade-up` (keyframe reutilizable, respeta el `prefers-reduced-motion` global ya existente).
+- **`components/ui/button.tsx`:** `hover:scale-[1.02]` en la definición base → todo botón de la app (los "+ Nuevo X" de las 7 secciones, "Guardar", etc.) lo hereda sin tocar cada página.
+- **`components/ui/table.tsx`:** transición de hover de fila explícita (`duration-150 ease-[var(--ease-out)]`).
+- **`components/status-badge.tsx` y `components/role-badge.tsx`:** badges pasados de tokens `-bg` sólidos a opacidad 10% (`bg-success/10 text-success`, etc.) — pedido explícitamente para Facturas/Presupuestos/Compras/Contratos y también aplicado a Usuarios (roles) por consistencia.
+- **`components/layout/sidebar.tsx`:** (1) **bug real corregido** — el `<nav>` interno (`SidebarNavGroups`, compartido por el sidebar desktop y el drawer mobile) tenía `flex-1` sin `min-h-0`; un flex item no encoge por debajo de su contenido sin eso, así que con navegación larga el pie (correo + "Cerrar sesión") podía quedar empujado fuera del viewport en vez de dejar scrollear solo al `<nav>`. Se agregó `min-h-0`. El ancho ya animaba al colapsar (`transition-[width]`), no hizo falta tocarlo. (2) `hover:scale-[1.02]` en los enlaces de navegación.
+- **~40 tarjetas repetidas en 20 archivos de `app/dashboard/**` (todas las listas, detalles y formularios de alta de las 7 secciones + Resumen):** el wrapper `rounded-xl|rounded-2xl border border-border bg-card` estaba literalmente duplicado en cada página (sin componente `Card` compartido). En vez de crear una abstracción nueva a mitad de un rediseño ya grande, se hizo un reemplazo de texto dirigido (`sed`, acotado a `app/dashboard/`) que le agrega a cada una `animate-fade-up` (entrada) + hover de borde/sombra — excluyendo las 2 tarjetas de producto/servicio que ya tenían su propio hover (`hover:border-primary/40`, que además ahora es verde automáticamente vía el token).
+
+**Cambios específicos en "Resumen" (ex-"Cabina", `app/dashboard/page.tsx` + `lib/nav.ts`):**
+- Renombrada "Cabina" → "Resumen" (ítem del sidebar y título derivado por ruta en `navTitleFor`).
+- Quitados: el texto "USD" bajo "Por cobrar", la frase "vs. \{período\} anterior" (queda solo la píldora de tendencia), y la pregunta "¿cuándo entra lo que me deben?" (sus dos apariciones).
+- "Pipeline del período" renombrada a "Flujo de facturación".
+- Decimales de Vencido/Por vencer/Cobrado separados con `splitAmount()` (ya existía para el número grande) y atenuados (`text-muted-foreground/70`), igual que en el mockup.
+- Números de los nodos del gráfico "Flujo esperado" fijados a `text-foreground` (blanco puro) siempre, en vez de heredar el color de vencido/muted.
+- **Bug real corregido:** las etiquetas de mes y de monto bajo "Flujo esperado" se posicionaban con columnas `flex-1` repartidas en partes iguales, que NO coinciden con la posición real de cada punto de la curva salvo que los buckets sean perfectamente simétricos (la curva usa `pad=12` sobre un `viewBox` de 400, `buildLinePath`). Reemplazado por posicionamiento absoluto usando el `x`/`y` real de cada punto (`forecast.points[i]`) — ahora cada mes queda exactamente debajo de su punto.
+
+**Validado (ejecutado de verdad):**
+- `apps/web`: `tsc --noEmit` ✅, `eslint .` ✅ (sin issues en todo el proyecto), `npm run build` ✅ (23 rutas).
+- QA visual en navegador real (Chrome vía `claude-in-chrome`, sesión `qa.owner`, backend local levantado contra la misma Supabase de producción documentada en sesiones previas — solo lectura, sin escrituras): Resumen, Facturas, Usuarios. Confirmado: título "Resumen", textos redundantes fuera, decimales atenuados, números del gráfico en blanco, meses alineados bajo cada punto, punto rojo conectado al inicio de la curva verde, pie del sidebar (correo + Cerrar sesión) visible sin cortarse, badges a opacidad 10%, colapso de sidebar animado.
+- **No verificado visualmente** (no bloqueante): Presupuestos, Compras, Contratos, Productos y Servicios no se navegaron uno por uno en el navegador — se confirmó por código que las 20 rutas comparten los mismos componentes (`Table`, `StatusBadge`, `Button`, tarjeta con `animate-fade-up`) ya verificados en Facturas/Usuarios, y las 20 compilan sin errores.
+
+**Sin commitear:** todo el cambio queda en el working tree — a la espera de aprobación explícita antes de `git add`/`commit` (regla del proyecto). Archivos tocados: `apps/web/app/globals.css`, `apps/web/lib/nav.ts`, `apps/web/components/ui/button.tsx`, `apps/web/components/ui/table.tsx`, `apps/web/components/status-badge.tsx`, `apps/web/components/role-badge.tsx`, `apps/web/components/layout/sidebar.tsx`, `apps/web/app/dashboard/page.tsx`, y las 20 vistas bajo `apps/web/app/dashboard/**` (solo la clase del wrapper de tarjeta).
+
+### Ajuste posterior (mismo día) — quitar el buscador del encabezado + sidebar `h-screen` literal
+
+Dos correcciones puntuales pedidas después de revisar en navegador:
+
+1. **Buscador quitado del topbar** (`components/layout/topbar.tsx`): el botón "Buscar ⌘K" que abría la command palette se eliminó del encabezado por completo. Es un componente compartido por las 20 rutas (no solo Resumen), así que desaparece en toda la app — el atajo de teclado ⌘K/Ctrl+K sigue funcionando igual (vive en `command-palette-provider.tsx`, no dependía del botón).
+2. **Sidebar reestructurado literalmente como se pidió** (`components/layout/sidebar.tsx`): `<aside>` pasa de "tarjeta flotante" (`sticky` + margen + `h-[calc(100vh-1.75rem)]` + bordes redondeados) a `sticky top-0 h-screen flex-col justify-between` a ras del borde, con `border-r` en vez de sombra. Dos bloques estrictos: bloque superior (`min-h-0 flex-1`) con el toggle de colapsar + logo arriba y la navegación con su propio scroll debajo; bloque inferior (`shrink-0`, con `border-t` y padding propio) con avatar + correo + "Cerrar sesión", que ya no se corta. El toggle de colapsar (antes al pie, junto al correo) se movió arriba, junto al logo. Ancho anima con `transition-all duration-300 ease-in-out`; hover de los enlaces con `transition-colors duration-200` (ya existía, se ajustó el timing exacto pedido). **Nota técnica:** se mantuvo `sticky top-0` junto con `h-screen` (no se pidió explícitamente, pero es necesario) porque el layout no tiene contenedor de scroll propio por página — es el `body` el que scrollea en pantallas largas — así que sin `sticky` el sidebar se hubiese ido scrolleando con el resto de la página en vez de quedar fijo.
+- `app/dashboard/layout.tsx`: comentario desactualizado corregido (ya no describe al sidebar como "superficie flotante con margen").
+
+**Validado:** `tsc --noEmit` ✅, `eslint` ✅, `npm run build` ✅ (23 rutas). QA visual en navegador real: buscador ausente, colapso/expansión del sidebar fluido, correo + "Cerrar sesión" 100% visibles con navegación completa.
+
+### Segundo ajuste (mismo día) — fidelidad exacta del sidebar contra el archivo de referencia
+
+El usuario proveyó un `.zip` ("Dashboard styling con referencia visual.zip") pidiendo leer un `.html` "limpio" distinto al `.dc.html` anterior. Verificado: el zip contiene exactamente los mismos 3 archivos de siempre (mismo hash/tamaño de `Cabina Carbón.dc.html`) — no existe una exportación HTML separada; se lo comuniqué al usuario y seguí trabajando con el mismo `.dc.html` ya leído.
+
+Comparando línea por línea la sidebar del mockup contra `components/layout/sidebar.tsx`, aparecieron diferencias reales de fidelidad (no solo estéticas — probablemente la razón de que el usuario siguiera viendo el pie "roto" pese al fix de `min-h-0`):
+- **Fondo del sidebar:** era `bg-card` (#141416, el mismo gris que las tarjetas); en la referencia el sidebar comparte el negro de fondo de la página (`bg-background`, #0A0A0B) y se separa solo por `border-r`.
+- **Botón "Cerrar sesión":** antes era un link de texto chico (10px) apretado debajo del correo, dentro de la misma fila que el avatar. En la referencia es su **propia fila de ancho completo**, con ícono, mismo tratamiento que un ítem de navegación (padding, radio 10px, hover propio) — mucho más fácil de ver y de tocar. Reestructurado así.
+- Tamaños ajustados al valor exacto del mockup: ancho del sidebar 214px/66px (antes 216/68), avatar circular de 30px (antes cuadrado redondeado de 26px), botón de colapsar 30px con borde y fondo de tarjeta, radio de los ítems de nav 10px (antes 8px), encabezados de grupo a 11px sin atenuar (antes 9.5px al 70% de opacidad), hover de los enlaces a color sólido (antes 70% de opacidad). Se agregó la línea "FinanceApi · v1.0.0" bajo el correo, presente en la referencia.
+
+**Punto 2 del pedido (propagar la paleta a Facturas/Presupuestos/Compras/Contratos/Productos/Servicios/Usuarios):** ya estaba resuelto por el cambio de tokens de la sesión anterior (mismo `#0A0A0B`/`#141416`/`#00F59B` pedidos ahora) — no hizo falta ninguna acción nueva ahí.
+
+**Validado:** `tsc --noEmit` ✅, `eslint` ✅, `npm run build` ✅ (23 rutas). QA visual en navegador real: sidebar sin costura visible contra el fondo, "Cerrar sesión" como fila completa con su propio hover, colapso/expansión correctos con el sidebar colapsado a 66px.
+
+### Tercer ajuste (mismo día) — nueva lógica de interacción del colapso
+
+Se reemplazó el botón único de colapsar/expandir por dos puntos de entrada distintos, pedidos explícitamente:
+- **Sin botón de hamburguesa arriba:** eliminado por completo; el bloque superior ahora es solo el logo.
+- **"Resumen" reabre:** con el sidebar colapsado, click en el ítem "Resumen" navega Y expande el sidebar en el mismo gesto (`NavRow` detecta `item.href === '/dashboard'` + `collapsed`, dispara `onExpand`). El resto de los ítems navegan sin expandir.
+- **Botón central que solo cierra:** un botón circular con `ChevronLeft`, posicionado `absolute top-1/2 right-0` (centrado verticalmente, a caballo sobre el borde derecho), visible únicamente cuando el sidebar está expandido — su única función es colapsar.
+
+Se mantuvo intacta la estructura `h-screen flex-col justify-between` (bloque inferior con correo + "Cerrar sesión" fijo) del ajuste anterior.
+
+**Validado:** `tsc --noEmit` ✅, `eslint` ✅, `npm run build` ✅ (23 rutas). QA visual en navegador real: botón superior ausente, click en "Resumen" con el sidebar colapsado lo reabre, botón central colapsa y desaparece al expandir, pie siempre visible en ambos estados.
+
+### Cuarto ajuste (mismo día) — limpieza/refactor de los archivos tocados hoy
+
+Pasada de limpieza pedida explícitamente sobre los archivos de esta sesión (`globals.css`, `lib/nav.ts`, `components/layout/sidebar.tsx`, `components/layout/topbar.tsx`, `app/dashboard/page.tsx`, `app/dashboard/layout.tsx`, `components/ui/button.tsx`, `components/ui/table.tsx`, `components/status-badge.tsx`, `components/role-badge.tsx`). Resultado honesto: los comentarios de este proyecto ya eran en español y explicaban el "por qué" (no el "qué") desde antes de esta sesión — no había comentarios automáticos ni en inglés que purgar. Lo que sí apareció y se corrigió:
+
+- **Código CSS muerto real, verificado por grep en todo `apps/web`:** `.rule-fade` (clase definida en `globals.css`, cero usos en cualquier `.tsx`) y el token `--line-soft` que solo alimentaba a esa clase — ambos eliminados junto con su mapeo en `@theme inline`.
+- **Comentarios desactualizados (no solo redundantes, directamente incorrectos):** el comentario de cabecera de `sidebar.tsx` seguía describiendo el sidebar como "superficie flotante... no una columna pegada al borde con un divisor" — exactamente lo opuesto de la estructura actual (a ras del borde, con `border-r`). Corregido. Referencias sueltas a "Cabina" (nombre viejo, ya renombrado a "Resumen") en `topbar.tsx` y `app/dashboard/page.tsx` también actualizadas.
+- **Comentarios consolidados:** el bloque de comentarios del `<aside>` en `sidebar.tsx` se había ido acumulando en las tres rondas de edición de hoy (min-h-0, h-screen+sticky, bg-background vs bg-card) hasta quedar largo y algo repetitivo; se condensó a las razones esenciales sin perder ninguna.
+
+**Decisión explícita, no una omisión:** se dejó intacta la rampa `--chart-1`...`--chart-5`/`--chart-rest` aunque `--chart-1` y `--chart-5` no tienen consumidor hoy (`chart-2`, `chart-3`, `chart-4` y `chart-rest` sí, en el embudo y la distribución de clientes de "Flujo de facturación"/"Riesgo de cartera"). Es una escala de 6 pasos con nombre coherente, parcialmente usada — borrar solo 2 de los 6 la dejaría con huecos arbitrarios en vez de más limpia. Si se prefiere que se recorte también, decirlo explícitamente.
+
+**Validado:** `tsc --noEmit` ✅, `eslint .` ✅ (sin issues en todo el proyecto), `npm run build` ✅ (23 rutas). Confirmado visualmente en navegador que el diseño y el comportamiento quedaron pixel-idénticos a antes de la limpieza (cambios puramente internos).
 
 ## Notas importantes
 
