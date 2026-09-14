@@ -112,7 +112,7 @@ export default function ServiceDetailPage() {
         {!error && !service && <DetailSkeleton />}
 
         {service && !editing && (
-          <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <div className="rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-6 shadow-xs">
             <div className="mb-5 flex flex-wrap items-start justify-between gap-y-2">
               <div className="min-w-0">
                 <p className="font-medium">{service.name}</p>
@@ -141,7 +141,7 @@ export default function ServiceDetailPage() {
         )}
 
         {service && editing && (
-          <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+          <div className="rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-6 shadow-xs">
             <h2 className="mb-6 text-[15px] font-semibold">Editar servicio</h2>
             <div className="mb-5">
               <LedgerLabel>NOMBRE</LedgerLabel>

@@ -7,8 +7,8 @@ import type { Role } from '@/lib/nav';
 const ROLE_STYLES: Record<Role, string> = {
   USER: 'bg-muted text-muted-foreground',
   TEAM: 'bg-secondary text-secondary-foreground',
-  ADMIN: 'bg-warning-bg text-warning',
-  OWNER: 'bg-success-bg text-success',
+  ADMIN: 'bg-warning/10 text-warning',
+  OWNER: 'bg-success/10 text-success',
 };
 
 export const ROLE_LABELS: Record<Role, string> = {

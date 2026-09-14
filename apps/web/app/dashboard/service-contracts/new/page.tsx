@@ -100,7 +100,7 @@ export default function NewServiceContractPage() {
       <Topbar title="Nuevo contrato" />
 
       <div className="max-w-2xl p-7">
-        <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+        <div className="rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-6 shadow-xs">
           <h2 className="mb-6 text-[15px] font-semibold">Nuevo contrato</h2>
 
           <div className="mb-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
