@@ -68,7 +68,7 @@ export default function ProductsListPage() {
         )}
 
         {result?.data.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card shadow-xs">
+          <div className="rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] shadow-xs">
             <EmptyState
               title="Catálogo vacío"
               description="Los productos que ofrezcas a tus clientes van a aparecer acá."
@@ -86,7 +86,7 @@ export default function ProductsListPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {result === null
               ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="rounded-xl border border-border bg-card p-5 shadow-xs">
+                  <div key={i} className="rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-5 shadow-xs">
                     <Skeleton className="mb-2 h-4 w-2/3" />
                     <Skeleton className="mb-4 h-3 w-full" />
                     <Skeleton className="h-5 w-16" />
@@ -112,7 +112,7 @@ export default function ProductsListPage() {
         )}
 
         {result && result.meta.totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3">
+          <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] px-4 py-3">
             <p className="text-xs text-muted-foreground">
               Página {result.meta.page} de {result.meta.totalPages}
             </p>

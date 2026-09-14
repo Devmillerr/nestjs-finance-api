@@ -71,7 +71,7 @@ export default function PurchasesListPage() {
           </p>
         )}
 
-        <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+        <div className="rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] shadow-xs overflow-hidden">
           {result?.data.length === 0 ? (
             <EmptyState
               title="Sin compras todavía"

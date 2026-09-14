@@ -3,11 +3,11 @@ import { cn } from '@/lib/utils';
 // Mapea los valores REALES de los enums del backend (PaymentStatus,
 // ContractStatus) -- no una lista inventada aparte que pueda desincronizarse.
 const STATUS_STYLES: Record<string, string> = {
-  COMPLETED: 'bg-success-bg text-success',
-  ACTIVE: 'bg-success-bg text-success',
-  PENDING: 'bg-warning-bg text-warning',
-  NOT_COMPLETED: 'bg-warning-bg text-warning',
-  INACTIVE: 'bg-muted text-muted-foreground',
+  COMPLETED: 'bg-success/10 text-success',
+  ACTIVE: 'bg-success/10 text-success',
+  PENDING: 'bg-warning/10 text-warning',
+  NOT_COMPLETED: 'bg-warning/10 text-warning',
+  INACTIVE: 'bg-muted-foreground/10 text-muted-foreground',
   CANCELED: 'bg-destructive/10 text-destructive',
 };
 

@@ -155,7 +155,7 @@ export default function ServiceContractDetailPage() {
 
         {contract && (
           <div className="flex flex-col gap-4">
-            <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+            <div className="rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] p-6 shadow-xs">
               <div className="flex flex-wrap items-start justify-between gap-y-2">
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">
@@ -205,7 +205,7 @@ export default function ServiceContractDetailPage() {
               )}
             </div>
 
-            <div className="rounded-xl border border-border bg-card shadow-xs">
+            <div className="rounded-xl border border-border bg-card animate-fade-up transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out)] hover:border-foreground/15 hover:shadow-[0_10px_30px_-18px_rgb(0_0_0_/_0.45)] shadow-xs">
               <div className="border-b border-border px-6 py-4">
                 <p className="text-sm font-semibold">Equipo asignado</p>
                 <p className="text-xs text-muted-foreground">
