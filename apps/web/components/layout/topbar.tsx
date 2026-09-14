@@ -1,30 +1,20 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Search, Sun, Moon, Menu } from 'lucide-react';
-import { useCommandPalette } from '@/components/providers/command-palette-provider';
+import { Sun, Moon, Menu } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 import { useMobileNav } from '@/components/providers/mobile-nav-provider';
 import { navTitleFor } from '@/lib/nav';
 
-// Dirección "Cabina" (2C): el topbar ya no es una barra con fondo y borde
-// inferior — flota sobre el mismo fondo que el contenido, y la jerarquía la
-// dan el tipo y el espacio.
+// El topbar flota sobre el mismo fondo que el contenido (sin barra ni borde
+// inferior): la jerarquía la dan el tipo y el espacio, no un contenedor.
 //
-// Dos cambios de comportamiento respecto a la versión anterior:
-//
-// 1. title/subtitle pasan a ser opcionales y por defecto se derivan de la
-//    ruta (lib/nav.ts). Antes cada página pasaba su título acá Y además
-//    renderizaba <PageHeader> con el mismo texto, así que "Compras" aparecía
-//    dos veces, a 15px y a 20px (hallazgo #5 de la auditoría). Las páginas
-//    ya no necesitan pasar nada; el <PageHeader> duplicado se puede borrar
-//    en el PR de cada pantalla.
-// 2. `actions` es el slot donde cada página monta sus controles propios (el
-//    selector de periodo de la Cabina, "Nueva factura" en Facturas). El
-//    topbar no los conoce.
-//
-// El avatar y el logout se mudaron al pie del sidebar, junto al email: son
-// datos de sesión, no acciones de la pantalla.
+// title/subtitle son opcionales: por defecto se derivan de la ruta actual
+// (lib/nav.ts), así que la mayoría de las páginas no necesita pasar nada.
+// `actions` es el slot donde cada página monta sus propios controles (el
+// selector de período de Resumen, "Nueva factura" en Facturas) -- el topbar
+// no los conoce. El avatar y el logout viven en el pie del sidebar, junto al
+// email: son datos de sesión, no acciones de la pantalla.
 
 export function Topbar({
   title,
@@ -36,7 +26,6 @@ export function Topbar({
   actions?: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { setOpen } = useCommandPalette();
   const { theme, toggleTheme } = useTheme();
   const { setOpen: setMobileNavOpen } = useMobileNav();
 
@@ -67,17 +56,6 @@ export function Topbar({
 
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
         {actions}
-
-        <button
-          onClick={() => setOpen(true)}
-          aria-label="Buscar"
-          className="flex items-center gap-2 rounded-lg bg-card px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors duration-150 hover:text-foreground"
-          style={{ boxShadow: 'inset 0 0 0 1px var(--border)' }}
-        >
-          <Search size={14} strokeWidth={1.6} />
-          <span className="hidden sm:inline">Buscar</span>
-          <kbd className="hidden font-mono text-[10px] text-muted-foreground/60 sm:inline">⌘K</kbd>
-        </button>
 
         <button
           onClick={toggleTheme}
