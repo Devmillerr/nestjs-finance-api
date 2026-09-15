@@ -6,10 +6,9 @@
 
 ## Estado general
 
-- Backend: 🟢 Cerrado. `GET /dashboard/stats` extendido (ver sesión 2026-09-11) con agregaciones nuevas para la Cabina rediseñada.
-- Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado. **Dirección visual "Premium Dark" consolidada en toda la app** (sesión 2026-09-14): mismo accent verde esmeralda del login ahora propagado al modo oscuro completo (Resumen/ex-Cabina + Facturas + Presupuestos + Compras + Contratos + Productos + Servicios + Usuarios) vía tokens centrales, no por archivo.
-- **Pendiente de commit:** el rediseño "Premium Dark" (sesión 2026-09-14, ver abajo) está implementado y validado en este working tree, pero todavía no commiteado — a la espera de tu aprobación explícita (regla del proyecto: mostrar diff/archivos antes de `git add`/`commit`). El rediseño de `/login` (commit `ace7c7a`, sesión anterior) ya está commiteado.
-- Hasta la sesión 2026-09-11, todo el trabajo estaba commiteado y publicado. La rama `feat/finance-api-complete` fue pusheada correctamente a `origin` y está al día (`up to date with 'origin/feat/finance-api-complete'`).
+- Backend: 🟢 Cerrado. `GET /dashboard/stats` extendido (sesión 2026-09-11) con agregaciones para la Cabina rediseñada. Login con Google agregado (sesión 2026-09-14, ver abajo) — código completo y validado, pero **el popup de Google todavía no se pudo confirmar abriendo de punta a punta** (ver detalle: puede ser un tema de configuración del Client ID, no del código).
+- Frontend: 🟢 Cerrado a nivel de diagnóstico — Etapas 1, 2 y 3 cerradas, Service Contracts implementado, Roles y permisos implementado. Dirección visual "Premium Dark" consolidada en toda la app (sesión 2026-09-14, commits `02cf16d`..`f435797`, pusheados a `origin`): mismo accent verde esmeralda del login propagado al modo oscuro completo vía tokens centrales.
+- **Pendiente de commit:** el login con Google (sesión 2026-09-14, ver abajo) está implementado en este working tree, pero todavía no commiteado — a la espera de confirmar que el popup abre de verdad antes de darlo por cerrado. Todo lo demás de la sesión 2026-09-14 ya está commiteado y pusheado.
 - La rama `V2` permanece intacta en `origin`; ambas historias (`feat/finance-api-complete` y `V2`) siguen sin ancestro común (`git merge-base` no encuentra base compartida).
 
 ## Etapas
@@ -170,6 +169,37 @@ Pasada de limpieza pedida explícitamente sobre los archivos de esta sesión (`g
 **Decisión explícita, no una omisión:** se dejó intacta la rampa `--chart-1`...`--chart-5`/`--chart-rest` aunque `--chart-1` y `--chart-5` no tienen consumidor hoy (`chart-2`, `chart-3`, `chart-4` y `chart-rest` sí, en el embudo y la distribución de clientes de "Flujo de facturación"/"Riesgo de cartera"). Es una escala de 6 pasos con nombre coherente, parcialmente usada — borrar solo 2 de los 6 la dejaría con huecos arbitrarios en vez de más limpia. Si se prefiere que se recorte también, decirlo explícitamente.
 
 **Validado:** `tsc --noEmit` ✅, `eslint .` ✅ (sin issues en todo el proyecto), `npm run build` ✅ (23 rutas). Confirmado visualmente en navegador que el diseño y el comportamiento quedaron pixel-idénticos a antes de la limpieza (cambios puramente internos).
+
+## Cierre de sesión (2026-09-14) — login real con Google
+
+**Objetivo:** el botón "Continuar con Google" del login era visual desde el rediseño (sin backend de OAuth). Se implementó el flujo real, a pedido explícito del usuario tras preguntar por qué no funcionaba.
+
+**Primer diseño (descartado en la misma sesión):** verificación de ID token vía el botón pre-armado de Google (`google.accounts.id.renderButton`), oculto y superpuesto sobre el botón ya diseñado. **No funciona**: Google mide ese botón a 0x0 si detecta que su contenedor no es visible — es una protección anti-clickjacking del lado de Google, no hay forma de esconderlo detrás de un botón propio. Confirmado inspeccionando el DOM en vivo (el `<iframe>` interno medía `0,0` incluso con el contenedor correctamente dimensionado).
+
+**Diseño final:** OAuth2 "code client" (`google.accounts.oauth2.initCodeClient`, `ux_mode:'popup'`), pensado por Google específicamente para botones propios — se dispara con `.requestCode()` desde el click real del botón ya diseñado (sin proxy ni click sintético) y abre un popup real. Esto sí requiere un **Client Secret** además del Client ID (el backend intercambia el `code` por un `id_token` en una llamada servidor-a-servidor) — a diferencia del primer diseño, que solo necesitaba el Client ID.
+
+**Backend (`apps/api`):**
+- `auth.service.ts` — `OAuth2Client` ahora se construye con Client ID + Client Secret + `redirect_uri:'postmessage'` (el valor especial que espera Google para el code flow por popup). `loginWithGoogle(code, ip)`: intercambia el `code` por tokens (`getToken()`), verifica el `id_token` resultante igual que antes (`email_verified` obligatorio), busca o crea el usuario por email y reutiliza `issueTokenPair()`.
+- **Decisión explícita para no migrar el schema:** no se agregó un campo `googleId` a `User` (la tabla vive en la misma base de Supabase que producción; matchear por email alcanza porque Google ya garantiza que ese email está verificado). Una cuenta creada por Google recibe un `passwordHash` aleatorio inutilizable.
+- `auth.controller.ts` — `POST /auth/google` (`@Public()`, throttle 5/60s).
+- `GoogleLoginDto` — campo `code` (no `idToken`).
+- `.env.example` documentado con `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
+
+**Frontend (`apps/web`):**
+- `app/api/auth/google/route.ts` — ruta BFF (sin cambios respecto al primer diseño, es un passthrough genérico).
+- `auth-provider.tsx` — `loginWithGoogle(code)`.
+- `app/login/page.tsx` — botón ya diseñado con `onClick` directo a `googleClientRef.current.requestCode()`, sin overlay ni click sintético. `error_callback` agregado para que un popup bloqueado muestre un error real en vez de fallar en silencio.
+- `.env.local` / `.env.local.example` con `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+
+**Bug real encontrado y corregido en el `.env` del usuario (no era del código):** `apps/api/.env` tenía un bloque pegado de una plantilla genérica de Google OAuth al final del archivo, con un **segundo `DATABASE_URL` duplicado** (`localhost:5432`, credenciales placeholder) que sobreescribía al `DATABASE_URL` real de Supabase de la línea 1 — el backend no podía levantar por esto. Se limpió el duplicado y las variables sueltas sin uso (`NEXTAUTH_SECRET`, `JWT_SECRET`, `APP_URL`, `NODE_ENV` repetido — leftovers de una plantilla de NextAuth.js, que esta app no usa). Quedaron `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (sí se usan) y `GOOGLE_CALLBACK_URL` (no se usa con este flujo, inofensivo, se dejó sin tocar).
+
+**Validado (ejecutado de verdad):**
+- `apps/api`: `tsc --noEmit` ✅, `eslint` ✅, `npm run build` ✅, `npm test` → 78/78 (sin regresiones).
+- `apps/web`: `tsc --noEmit` ✅, `eslint` ✅, `npm run build` ✅ (24 rutas, incluye `/api/auth/google`).
+- QA en navegador real con el Client ID real del usuario: el script de Google carga, `initCodeClient` se crea correctamente, y un click real (confirmado con un botón de prueba descartable: `window.open()` sí abre popup desde un click real en este navegador) llega al handler. **Pero `requestCode()` de Google devuelve `Failed to open popup window`** en esta sesión de navegador automatizado — no se pudo confirmar el popup de Google abriendo de punta a punta.
+- **No se pudo determinar la causa exacta** entre dos posibilidades: (a) algo específico de este navegador controlado por automatización que interfiere solo con popups cross-origin hacia `accounts.google.com` (un `window.open` común sí funcionó, uno de Google no) — no sería un problema para un usuario real; o (b) `http://localhost:3000` no está realmente guardado en "Authorized JavaScript origins" del Client ID en Google Cloud Console, o el cambio no terminó de propagarse (Google documenta que puede tardar unos minutos). **Pendiente para la próxima sesión: probar el botón en un navegador normal (no automatizado) y confirmar el origen autorizado en Google Cloud Console.**
+
+**Sin commitear:** `apps/api/.env.example`, `apps/api/package.json` + `package-lock.json` (dependencia `google-auth-library`), `apps/api/src/auth/auth.controller.ts`, `apps/api/src/auth/auth.service.ts`, `apps/api/src/auth/dto/google-login.dto.ts` (nuevo), `apps/web/app/api/auth/google/route.ts` (nuevo), `apps/web/app/login/page.tsx`, `apps/web/components/providers/auth-provider.tsx`, `apps/web/.env.local.example`. A propósito, a la espera de confirmar el popup antes de darlo por cerrado.
 
 ## Notas importantes
 
