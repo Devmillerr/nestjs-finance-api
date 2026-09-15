@@ -25,6 +25,7 @@ interface AuthContextValue {
   // estado de carga separado acá.
   viewer: NavViewer | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (code: string) => Promise<void>;
   logout: () => Promise<void>;
   // Wrapper de apiFetch que ya conoce el access token actual y reintenta
   // una vez tras un refresh silencioso si el backend devuelve 401 (el
@@ -118,6 +119,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [setSession],
   );
 
+  const loginWithGoogle = useCallback(
+    async (code: string) => {
+      let res: Response;
+      try {
+        res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        });
+      } catch {
+        throw new Error('No se pudo conectar con el servidor. Revisá tu conexión e intentá de nuevo.');
+      }
+      const data = await res.json();
+      if (!res.ok) {
+        const message = Array.isArray(data.message) ? data.message.join(' ') : data.message;
+        throw new Error(message ?? 'No se pudo iniciar sesión con Google');
+      }
+      setSession(data.accessToken);
+    },
+    [setSession],
+  );
+
   const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined);
     setSession(null);
@@ -143,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ status, user, viewer, login, logout, authFetch }}>
+    <AuthContext.Provider value={{ status, user, viewer, login, loginWithGoogle, logout, authFetch }}>
       {children}
     </AuthContext.Provider>
   );

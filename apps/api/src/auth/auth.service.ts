@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomUUID } from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -20,11 +21,22 @@ export interface TokenPair {
 
 @Injectable()
 export class AuthService {
+  private readonly googleClient: OAuth2Client;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
-  ) {}
+  ) {
+    // redirect_uri: 'postmessage' es el valor especial que espera Google
+    // para el code flow disparado desde JS en un popup (sin redirect real) --
+    // ver loginWithGoogle().
+    this.googleClient = new OAuth2Client(
+      this.config.get<string>('GOOGLE_CLIENT_ID'),
+      this.config.get<string>('GOOGLE_CLIENT_SECRET'),
+      'postmessage',
+    );
+  }
 
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({
@@ -69,6 +81,77 @@ export class AuthService {
     );
     if (!passwordMatches) {
       throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    return this.issueTokenPair(user.id, user.email, ip);
+  }
+
+  // "Continuar con Google": el frontend usa el code client de Google
+  // Identity Services (google.accounts.oauth2.initCodeClient, popup) -- no
+  // el botón pre-armado, que Google se niega a renderizar si detecta que su
+  // contenedor está oculto (protección anti-clickjacking, no hay forma de
+  // esconderlo detrás de un botón propio). El code client en cambio entrega
+  // un authorization code que acá se intercambia por un id_token (llamada
+  // servidor-a-servidor con el Client Secret) y ese sí se verifica como
+  // cualquier JWT de Google -- nunca se confía en un email sin marcar como
+  // verificado por Google.
+  //
+  // Sin campo `googleId` ni migración de schema a propósito: la tabla users
+  // vive en la misma base de Supabase que usa producción, y matchear por
+  // email alcanza (Google ya garantiza que ese email es del dueño de la
+  // cuenta). Una cuenta creada acá recibe un passwordHash de un valor
+  // aleatorio que nadie conoce -- nunca se podrá loguear con contraseña,
+  // solo con Google, hasta que exista un flujo de "definir contraseña".
+  async loginWithGoogle(code: string, ip?: string): Promise<TokenPair> {
+    const clientId = this.config.getOrThrow<string>('GOOGLE_CLIENT_ID');
+
+    let email: string | undefined;
+    let firstName: string | undefined;
+    let lastName: string | undefined;
+    try {
+      const { tokens } = await this.googleClient.getToken(code);
+      if (!tokens.id_token) {
+        throw new UnauthorizedException('Google no devolvió un id_token');
+      }
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: clientId,
+      });
+      const payload = ticket.getPayload();
+      if (!payload?.email || !payload.email_verified) {
+        throw new UnauthorizedException(
+          'No se pudo verificar el email de Google',
+        );
+      }
+      email = payload.email;
+      firstName = payload.given_name;
+      lastName = payload.family_name;
+    } catch (err) {
+      if (err instanceof UnauthorizedException) throw err;
+      throw new UnauthorizedException('Código de Google inválido');
+    }
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      const unusablePasswordHash = await bcrypt.hash(
+        randomUUID(),
+        BCRYPT_ROUNDS,
+      );
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          passwordHash: unusablePasswordHash,
+          details: {
+            create: {
+              firstName: firstName ?? 'Usuario',
+              lastName: lastName ?? 'Google',
+            },
+          },
+        },
+      });
+    } else if (!user.isActive) {
+      throw new UnauthorizedException('Cuenta inactiva');
     }
 
     return this.issueTokenPair(user.id, user.email, ip);

@@ -1,12 +1,51 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import Script from 'next/script';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/auth-provider';
 
+// Tipado mínimo de Google Identity Services (GIS): la librería no trae tipos
+// propios y no vale la pena instalar @types de un paquete tan chico para
+// esto solo.
+//
+// Se usa el flujo OAuth2 "code client" (google.accounts.oauth2), no el botón
+// pre-armado de google.accounts.id: ese botón mide 0x0 si detecta que su
+// contenedor no es visible (protección anti-clickjacking de Google, no hay
+// forma de esconderlo detrás de un botón propio). El code client en cambio
+// está pensado justo para esto -- se dispara desde el click de un botón
+// propio y abre un popup real, sin necesitar mostrar el botón de Google.
+interface GoogleCodeResponse {
+  code: string;
+}
+interface GoogleCodeClientError {
+  type: string;
+}
+interface GoogleCodeClient {
+  requestCode(): void;
+}
+interface GoogleIdentityServices {
+  accounts: {
+    oauth2: {
+      initCodeClient(config: {
+        client_id: string;
+        scope: string;
+        ux_mode: 'popup';
+        callback: (response: GoogleCodeResponse) => void;
+        error_callback: (error: GoogleCodeClientError) => void;
+      }): GoogleCodeClient;
+    };
+  };
+}
+declare global {
+  interface Window {
+    google?: GoogleIdentityServices;
+  }
+}
+
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +54,64 @@ export default function LoginPage() {
   const [focusField, setFocusField] = useState<'email' | 'password' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const googleClientRef = useRef<GoogleCodeClient | null>(null);
+  // El script puede terminar de cargar antes o después del montaje (orden no
+  // garantizado entre <Script> y este componente), así que initializeGoogle
+  // se llama desde los dos lados -- este flag evita crear el code client dos
+  // veces si ambos disparan.
+  const didInitGoogleRef = useRef(false);
+
+  async function handleGoogleCode(code: string) {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      await loginWithGoogle(code);
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión con Google');
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
+  function initializeGoogle() {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId || !window.google || didInitGoogleRef.current) return;
+    didInitGoogleRef.current = true;
+    googleClientRef.current = window.google.accounts.oauth2.initCodeClient({
+      client_id: clientId,
+      scope: 'openid email profile',
+      ux_mode: 'popup',
+      callback: (response) => {
+        if (response.code) void handleGoogleCode(response.code);
+      },
+      error_callback: (err) => {
+        // popup_closed: el usuario cerró el popup solo -- no es un error real.
+        if (err.type === 'popup_closed') return;
+        setError('No se pudo completar el login con Google. Probá de nuevo.');
+      },
+    });
+  }
+
+  // El script puede terminar de cargar antes o después de este efecto (orden
+  // no garantizado entre <Script> y el montaje del componente) -- por eso
+  // también se llama desde el onLoad del <Script> más abajo, no solo acá.
+  useEffect(() => {
+    initializeGoogle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initializeGoogle no depende de props/state que cambien; solo necesita correr una vez que el script está disponible.
+  }, []);
+
+  // requestCode() tiene que llamarse de forma síncrona dentro del propio
+  // click del usuario -- es lo que hace que el popup de Google cuente como
+  // gesto real y no lo bloquee el navegador.
+  function handleGoogleClick() {
+    if (!googleClientRef.current) {
+      setError('Login con Google no está configurado todavía.');
+      return;
+    }
+    googleClientRef.current.requestCode();
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -36,6 +133,11 @@ export default function LoginPage() {
     // resto de la app (que son azules -- ver globals.css). Es la puerta de
     // entrada, un momento oscuro deliberado, no el tema del dashboard.
     <div className="grid min-h-screen grid-cols-1 bg-[#0D0D0D] font-sans text-[#F2F4F0] lg:grid-cols-2">
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={initializeGoogle}
+      />
       <style>{`
         @keyframes login-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
         @keyframes login-glow { 0%, 100% { opacity: .5; } 50% { opacity: .9; } }
@@ -89,11 +191,11 @@ export default function LoginPage() {
         >
           <h2 className="mb-7 text-[27px] font-semibold tracking-[-0.025em]">Bienvenido</h2>
 
-          {/* Sin backend de Google OAuth todavía -- el botón queda visual, sin acción. */}
           <button
             type="button"
-            onClick={() => {}}
-            className="flex h-[52px] w-full items-center justify-center gap-3 rounded-[14px] border border-white/[0.16] bg-[#1E1E1E] text-[15px] font-medium text-[#F2F4F0] transition-colors duration-200 ease-out hover:border-[#00F59B]/50 hover:bg-[#262626] hover:shadow-[0_0_0_4px_rgba(0,245,155,.07)] active:scale-[0.985]"
+            onClick={handleGoogleClick}
+            disabled={googleLoading}
+            className="flex h-[52px] w-full items-center justify-center gap-3 rounded-[14px] border border-white/[0.16] bg-[#1E1E1E] text-[15px] font-medium text-[#F2F4F0] transition-colors duration-200 ease-out hover:border-[#00F59B]/50 hover:bg-[#262626] hover:shadow-[0_0_0_4px_rgba(0,245,155,.07)] active:scale-[0.985] disabled:pointer-events-none disabled:opacity-60"
           >
             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
               <path
@@ -113,7 +215,7 @@ export default function LoginPage() {
                 d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.1 5.6l6.2 5.2C41 35.5 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"
               />
             </svg>
-            Continuar con Google
+            {googleLoading ? 'Verificando' : 'Continuar con Google'}
           </button>
 
           <div className="my-[30px] h-px bg-gradient-to-r from-transparent via-white/[0.14] to-transparent" />
