@@ -34,10 +34,17 @@ const prisma = new PrismaClient();
 // este script corre standalone vía ts-node, fuera del contexto de Nest.
 const BCRYPT_ROUNDS = 12;
 
-// Contraseña de QA, no de producción: fija y documentada para que cualquiera
-// pueda loguearse con los usuarios de prueba sin tener que buscarla en otro
-// lado. Override opcional por env si alguien la quiere distinta en su máquina.
-const QA_PASSWORD = process.env.QA_SEED_PASSWORD ?? 'QaFinance#2026';
+// Contraseña de QA: obligatoria por env, sin valor por defecto. Un default
+// fijo en un repo público queda expuesto y, como el upsert de abajo resetea
+// passwordHash e isActive, re-correr el seed reactivaría todas las cuentas QA
+// con esa contraseña conocida. Si falta, se aborta antes de tocar la base.
+const QA_PASSWORD = process.env.QA_SEED_PASSWORD;
+if (!QA_PASSWORD) {
+  throw new Error(
+    'QA_SEED_PASSWORD no está seteada -- se aborta el seed de QA. ' +
+      'Definila con una contraseña propia antes de correr `npm run prisma:seed:qa`.',
+  );
+}
 const EMAIL_DOMAIN = 'qa.financeapi.test';
 
 const DAY_MS = 86_400_000;
@@ -695,14 +702,6 @@ async function printSummary(grantedPermissions: PermissionName[]) {
   console.log(`Contratos de servicio (total DB): ${contractCount}`);
   console.log(
     `Permisos extra otorgados a qa.limited: ${grantedPermissions.join(', ')}`,
-  );
-  console.log(
-    `\nContraseña QA (todos los usuarios activos @${EMAIL_DOMAIN}): ${QA_PASSWORD}`,
-  );
-  console.log(
-    '(el usuario qa.inactive@' +
-      EMAIL_DOMAIN +
-      ' tiene la misma contraseña pero isActive=false: debe fallar el login)',
   );
   console.log('===============================\n');
 }
