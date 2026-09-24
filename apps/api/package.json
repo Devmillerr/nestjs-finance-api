@@ -1,8 +1,8 @@
 {
   "name": "@financeapi/api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "FinanceApi V3 REST API: NestJS + Prisma/PostgreSQL financial management backend with JWT auth, role-based access control, resource ownership checks and idempotent payment endpoints",
+  "author": "Miler Castro Martínez (https://github.com/Devmillerr)",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
