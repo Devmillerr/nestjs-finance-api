@@ -90,6 +90,19 @@ All screenshots are from the live application, taken with a QA account. Most of 
 | **Input hardening** | Global `ValidationPipe` with `whitelist` + `forbidNonWhitelisted`: undeclared fields are rejected, which makes mass assignment (e.g. sending `role: "ADMIN"`) structurally impossible. |
 | **Observability** | Structured logs with `nestjs-pino`, a per-request correlation ID, and automatic redaction of `authorization`, `cookie`, `password` and `refreshToken`. |
 
+**Money in cents.** An amount such as `$125.50` is stored as the integer `12550`, and all arithmetic on it stays in integers.
+
+**Idempotent retry.** Sending the same request twice with the same key creates a single purchase; the second call returns the stored response:
+
+```http
+POST /api/v1/purchases
+Authorization: Bearer <access-token>
+Idempotency-Key: 3f6c1a52-8d2e-4b7a-9c1f-2a5e7d9b0c44
+Content-Type: application/json
+```
+
+**Price snapshot.** A product priced at `$15.00` is purchased, so the line item stores `1500`. If the product's price later changes to `$20.00`, that past purchase still shows `$15.00`.
+
 ## Architecture
 
 ```mermaid
@@ -107,6 +120,16 @@ flowchart LR
 - Runtime traffic goes through Supabase's transaction pooler; migrations use a direct connection (`DATABASE_URL` vs `DIRECT_URL`).
 
 Full reasoning for each decision: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+## API
+
+| | Live | Local |
+|---|---|---|
+| Base URL | `https://financeapi-api-m7tt.onrender.com/api/v1` | `http://localhost:5050/api/v1` |
+| Swagger / OpenAPI | [`/docs`](https://financeapi-api-m7tt.onrender.com/docs) | `http://localhost:5050/docs` |
+| Health check | `GET /health` | `GET http://localhost:5050/health` |
+
+The OpenAPI schemas are generated from the DTOs by the Nest CLI plugin, so the documented request bodies can't drift from the validation rules. Protected endpoints can be tried from Swagger UI with the **Authorize** button and a JWT access token.
 
 ## Tech stack
 
@@ -254,8 +277,9 @@ No database credentials are needed in CI: `prisma generate` only reads the schem
 
 ## Security
 
-- Passwords hashed with bcrypt (12 rounds); refresh tokens stored only as SHA-256 hashes.
+- Passwords hashed with bcrypt (12 rounds); refresh tokens stored only as SHA-256 hashes and revoked on logout.
 - Default-deny authorization with role and ownership checks.
+- Relational integrity enforced in PostgreSQL through foreign keys and unique constraints.
 - `helmet`, a single explicit CORS origin, strict request validation.
 - Global rate limiting, with a stricter limit on the login endpoints.
 - Row Level Security enabled (deny-by-default) on every table.
@@ -278,5 +302,11 @@ No database credentials are needed in CI: `prisma generate` only reads the schem
 
 **Miler Castro Martínez**
 
+Software Developer focused on **backend development, APIs and software that solves real business problems**.
+
 - GitHub: [@Devmillerr](https://github.com/Devmillerr)
 - LinkedIn: [linkedin.com/in/devmillerr](https://linkedin.com/in/devmillerr)
+
+## License
+
+This repository is published as a portfolio project and does not include an open-source license file.
