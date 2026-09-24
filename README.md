@@ -1,91 +1,510 @@
 # FinanceApi V3
 
-A production-oriented financial management REST API built with **NestJS**, **PostgreSQL** (via **Prisma**), and **Supabase**. Handles clients, product catalog, purchases, budgets, invoices, and service contracts — with JWT authentication, role/permission-based access control, and resource ownership enforcement.
+A full-stack financial management platform built with **NestJS, PostgreSQL, Prisma and Next.js**.
 
-This is a V2 → V3 rewrite. The original V2 (Express + TypeScript) had no real authentication in front of any endpoint, stored money as floating point, and had zero test coverage. The reasoning behind every architectural decision lives in [`ARCHITECTURE.md`](./ARCHITECTURE.md) — this README is the entry point.
+FinanceApi centralizes customers, products, purchases, budgets, invoices and service contracts in a system designed around **authentication, authorization, financial data integrity and transactional consistency**.
 
-## Stack
+## Demo
 
-| Layer | Choice | Why (short version — full reasoning in ARCHITECTURE.md) |
-|---|---|---|
-| Framework | NestJS 10 | Dependency injection, guards/interceptors as first-class citizens, structure enforced by the framework rather than convention |
-| Database | PostgreSQL (Supabase) | Relational integrity for financial data; Supabase for managed hosting + RLS |
-| ORM | Prisma 5 | Type-safe queries, migrations, mature NestJS integration |
-| Auth | JWT access + refresh, with rotation and reuse detection | Stateless access tokens, revocable sessions, standard defensible pattern |
-| Validation | class-validator / class-transformer | Declarative DTOs, integrated into Nest's request pipeline |
-| Logging | Pino (`nestjs-pino`) | Structured JSON logs, per-request correlation ID, automatic secret redaction |
-| API docs | OpenAPI/Swagger | Auto-generated from DTOs via the Nest CLI plugin, live at `/docs` |
-| Testing | Jest | Unit tests on business logic with a mocked Prisma layer, no real DB needed |
+<!-- Replace this image with the final product demo GIF/video -->
+![FinanceApi V3 Demo](./docs/demo.gif)
 
-## Architecture highlights
+**Live application:** [Add deployment URL]  
+**API documentation:** [Add Swagger URL]
 
-- **Money is stored as integers (cents)**, never floats — eliminates binary rounding error class of bugs entirely.
-- **Default-deny authorization**: every endpoint requires a valid JWT unless explicitly marked `@Public()`. RBAC (`@Roles()`) and fine-grained permissions (`@RequirePermissions()`) stack on top; resource ownership (`OwnershipGuard`) is enforced separately from role, so a `USER` can only read/act on their own purchases, budgets, and invoices. `GET /auth/me` exposes the current role/permissions to the frontend (never trusted from the JWT payload — re-resolved from the DB on every request, same as authorization itself); `PATCH /users/:id/role` (OWNER-only) and `POST`/`DELETE /users/:id/permissions` (ADMIN/OWNER) manage them.
-- **Refresh token rotation with reuse detection**: every refresh issues a new token and invalidates the old one. If an already-rotated token is presented again (a strong signal of token theft), every active session for that user is revoked.
-- **Idempotency keys** on the two payment-critical write endpoints (`POST /purchases`, `POST /invoices`): an optional `Idempotency-Key` header guarantees a network retry never creates a duplicate financial record.
-- **Snapshot pattern** on purchase/invoice line items: the price is frozen at transaction time and never recalculated if the underlying product's price changes later — required for financial record immutability.
-- **All multi-table writes run inside a Prisma `$transaction`** — a partial failure never leaves an orphaned record.
+---
 
-## Project structure
+## What I built
 
+FinanceApi was built as a practical financial management system rather than a simple CRUD application.
+
+The project focuses on the problems that appear when financial information is stored and processed across different modules:
+
+- Protecting access to business information.
+- Managing different user roles and permissions.
+- Preventing unauthorized access to another user's resources.
+- Keeping monetary calculations consistent.
+- Avoiding duplicate financial operations caused by network retries.
+- Preserving historical transaction prices.
+- Keeping multi-step database operations atomic.
+- Providing a frontend that consumes the API through a controlled authentication flow.
+
+The result is a complete system with a **Next.js frontend**, **NestJS REST API** and **PostgreSQL database**.
+
+---
+
+## Product Preview
+
+### Login
+
+![FinanceApi Login](./docs/screenshots/login.png)
+
+Authentication is handled through the API with access and refresh token flows.
+
+### Dashboard
+
+![FinanceApi Dashboard](./docs/screenshots/dashboard.png)
+
+The dashboard provides an overview of the application's financial information and key metrics.
+
+### Financial operations
+
+![FinanceApi Operations](./docs/screenshots/operations.png)
+
+The application includes interfaces for managing products, purchases, budgets, invoices and other business resources.
+
+> Screenshots show the real application interface. No mockup data or fictional product screens are used in the project documentation.
+
+---
+
+## Core Features
+
+### Authentication
+
+- Email/password authentication.
+- JWT access tokens.
+- Refresh tokens.
+- Refresh token rotation.
+- Reuse detection.
+- Session revocation.
+- Protected API endpoints.
+- HTTP-only cookie for the refresh token in the web application.
+
+### Authorization
+
+- Role-based access control.
+- Fine-grained permissions.
+- Resource ownership enforcement.
+- Default-deny authorization.
+- Protected routes with NestJS guards.
+- User role and permission management.
+
+### Financial management
+
+- Customers.
+- Product catalog.
+- Purchases.
+- Budgets.
+- Invoices.
+- Service contracts.
+- Dashboard information.
+- Financial transaction history.
+
+### Data integrity
+
+- Monetary values stored as integer cents instead of floating-point numbers.
+- Database transactions for multi-table operations.
+- Historical price snapshots for transaction line items.
+- Idempotency keys on payment-critical operations.
+- Relational constraints through PostgreSQL and Prisma.
+
+---
+
+## Engineering Highlights
+
+### Money as integers
+
+Financial amounts are stored as integer cents rather than floating-point values.
+
+```text
+$125.50 → 12550 cents
 ```
-apps/api/src/
-  auth/              JWT issuance, refresh rotation, register/login
-  users/              user profile CRUD, ownership-scoped
-  products/            product catalog (admin-managed)
-  purchases/            client purchases (transactional, snapshot pricing)
-  budgets/              client quotes (catalog reference or freeform line items)
-  invoices/              billing documents (computed totals, post-issuance charges)
-  services/              service catalog
-  service-contracts/      per-client contracts + team assignments
-  dashboard/            read-only aggregate stats (overdue invoices, client concentration, upcoming/recent activity) for the frontend overview page
-  common/
-    guards/            JwtAuthGuard, RolesGuard, PermissionsGuard, OwnershipGuard
-    decorators/          @Public, @Roles, @RequirePermissions, @OwnedResource, @CurrentUser
-    interceptors/        IdempotencyInterceptor
-    tasks/              IdempotencyReaperTask (reaps orphaned PENDING idempotency keys on a cron)
-    filters/            AllExceptionsFilter (single error response shape across the API)
-  prisma/              PrismaService (single client instance for the whole app)
 
-prisma/seed.ts          seeds the permission catalog + bootstrap OWNER user (see "Running locally")
+This avoids the class of binary floating-point rounding problems that can affect financial calculations.
+
+---
+
+### Idempotency
+
+Payment-critical operations support an optional `Idempotency-Key` header.
+
+This allows the API to safely handle network retries without accidentally creating duplicate financial records.
+
+```http
+POST /purchases
+Idempotency-Key: purchase-123456
 ```
 
-## Running locally
+---
+
+### Transaction snapshots
+
+Purchase and invoice line items preserve the price that existed when the transaction was created.
+
+Changing the current product price does not modify historical financial records.
+
+```text
+Product
+Current price: $18.00
+
+Purchase created
+Price snapshot: $15.00
+
+Later product update
+Current price: $20.00
+
+Historical purchase
+Still: $15.00
+```
+
+---
+
+### Database transactions
+
+Operations that modify multiple related records are executed inside Prisma transactions.
+
+This prevents partial writes when one step of an operation fails.
+
+```text
+Operation
+   │
+   ├── Create purchase
+   ├── Create line items
+   ├── Update inventory
+   └── Commit
+        │
+        └── All changes succeed together
+```
+
+---
+
+### Authorization layers
+
+Authorization is not based only on the user's role.
+
+The API combines:
+
+```text
+JWT Authentication
+       ↓
+Role Authorization
+       ↓
+Permission Authorization
+       ↓
+Resource Ownership
+       ↓
+Controller / Service
+```
+
+This allows the system to distinguish between:
+
+- Who the user is.
+- What role they have.
+- What permissions they have.
+- Whether they own or can access the requested resource.
+
+---
+
+## Architecture
+
+```text
+┌───────────────────────────────┐
+│         Next.js Web           │
+│                               │
+│ Dashboard · CRUD · Auth UI    │
+└───────────────┬───────────────┘
+                │
+                │ HTTP / REST
+                ▼
+┌───────────────────────────────┐
+│          NestJS API           │
+│                               │
+│ Auth · RBAC · Permissions     │
+│ Business Logic · Validation   │
+│ Transactions · Idempotency    │
+└───────────────┬───────────────┘
+                │
+                │ Prisma
+                ▼
+┌───────────────────────────────┐
+│          PostgreSQL           │
+│                               │
+│ Users · Products · Purchases  │
+│ Budgets · Invoices · etc.     │
+└───────────────────────────────┘
+```
+
+### Backend
+
+The API is organized into domain modules using NestJS.
+
+```text
+apps/api/
+├── src/
+│   ├── auth/
+│   ├── users/
+│   ├── products/
+│   ├── purchases/
+│   ├── invoices/
+│   ├── budgets/
+│   ├── services/
+│   ├── contracts/
+│   ├── common/
+│   └── main.ts
+└── prisma/
+```
+
+### Frontend
+
+The web application uses Next.js App Router.
+
+```text
+apps/web/
+├── app/
+├── components/
+├── lib/
+└── ...
+```
+
+The frontend uses a BFF-style authentication flow where the refresh token remains inside an HTTP-only cookie while the access token is handled in memory.
+
+---
+
+## API
+
+The backend exposes a REST API under:
+
+```text
+/api/v1
+```
+
+Interactive API documentation is available through Swagger/OpenAPI:
+
+```text
+/docs
+```
+
+The API includes typed DTOs, validation, authentication guards, authorization guards and documented endpoints.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 16 |
+| UI | React 19 |
+| Backend | NestJS 10 |
+| Language | TypeScript |
+| Database | PostgreSQL |
+| ORM | Prisma 5 |
+| Authentication | JWT |
+| API | REST |
+| Documentation | OpenAPI / Swagger |
+| Validation | class-validator / class-transformer |
+| Logging | Pino |
+| Testing | Jest |
+| Package manager | pnpm |
+| Deployment | Vercel / Render / Supabase |
+
+---
+
+## Project Structure
+
+```text
+financeapi-v3/
+│
+├── apps/
+│   ├── api/                 # NestJS REST API
+│   └── web/                 # Next.js frontend
+│
+├── ARCHITECTURE.md          # Detailed technical decisions
+├── SECURITY.md              # Security considerations
+├── package.json
+├── pnpm-workspace.yaml
+└── README.md
+```
+
+---
+
+## Running Locally
+
+### Requirements
+
+- Node.js 20+
+- pnpm
+- PostgreSQL
+- Git
+
+### Install
 
 ```bash
-cd apps/api
-cp .env.example .env   # fill in DATABASE_URL, DIRECT_URL, JWT secrets, SEED_OWNER_EMAIL/PASSWORD — see .env.example for where to get them
-npm install
-npx prisma generate
-npx prisma migrate deploy   # applies the schema to a fresh database — skip only if it's already up to date
-npx prisma db seed          # seeds the permission catalog + a bootstrap OWNER user (required: there is no other way to create the first admin)
-npm run build
-npm test
-npm run start:dev
+pnpm install
 ```
 
-API docs: `http://localhost:5050/docs`. Health check: `GET /health` (public, no auth).
+### Configure the API
+
+Create:
+
+```text
+apps/api/.env
+```
+
+using:
+
+```text
+apps/api/.env.example
+```
+
+Configure the required database and authentication environment variables.
+
+### Generate Prisma Client
+
+```bash
+pnpm --filter @financeapi/api prisma:generate
+```
+
+### Run database migrations
+
+```bash
+pnpm --filter @financeapi/api prisma:migrate
+```
+
+### Start the API
+
+```bash
+pnpm dev:api
+```
+
+The API will be available at:
+
+```text
+http://localhost:3001
+```
+
+Swagger:
+
+```text
+http://localhost:3001/docs
+```
+
+### Start the web application
+
+```bash
+pnpm --filter @financeapi/web dev
+```
+
+The frontend will be available at:
+
+```text
+http://localhost:3000
+```
+
+---
 
 ## Testing
 
+The API uses Jest for automated testing.
+
+Tests focus primarily on business logic and API behavior while mocking the Prisma layer where appropriate.
+
+Run:
+
 ```bash
-npm test              # unit tests, mocked Prisma — no database required
-npm run test:cov       # with coverage
+pnpm test:api
 ```
 
-Tests focus on business logic that actually matters in a financial domain: refresh token rotation and reuse detection, price snapshot correctness, transactional rollback on invalid line items, and the RBAC/permission decision logic — not framework boilerplate.
+Build the API:
+
+```bash
+pnpm build:api
+```
+
+Lint the workspace:
+
+```bash
+pnpm lint
+```
+
+---
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs lint + build + unit tests on every push/PR. No real database credentials are needed in CI — `prisma generate` only reads the schema, and the test suite mocks the Prisma layer entirely.
+The repository includes GitHub Actions for automated validation of the API.
 
-## Security notes
+The CI pipeline verifies:
 
-- Passwords hashed with bcrypt (12 rounds); refresh tokens stored as SHA-256 hashes, never in plaintext.
-- `helmet`, explicit CORS origin (no wildcard reflection), global `ValidationPipe` with `whitelist`/`forbidNonWhitelisted`, rate limiting (`@nestjs/throttler`, stricter on `/auth/login`).
-- Row Level Security enabled (deny-by-default, no policies) on every table in Supabase — closes off the auto-generated PostgREST API as an attack surface, since this app only ever connects through Prisma with its own connection string.
-- See [`SECURITY.md`](./SECURITY.md) for the OWASP API Security Top 10 checklist and [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design details.
+- Dependencies.
+- Prisma client generation.
+- ESLint.
+- TypeScript compilation.
+- API build.
+- Automated tests.
 
-## Status
+The goal is to catch regressions before changes reach the deployment environment.
 
-Backend: feature-complete and connected to a real frontend. All domain modules (auth, users, products, purchases, budgets, invoices, services, service-contracts), RBAC/permission management, and a read-only dashboard-stats endpoint are implemented, tested, and verified end-to-end against a live database. Frontend: a Next.js dashboard (`apps/web`) consumes this API — CRUD flows, role-based navigation, and the overview dashboard are wired up and working. See [`apps/web/README.md`](./apps/web/README.md) to run it locally.
+---
+
+## Security
+
+Security is treated as part of the architecture rather than an additional feature.
+
+The project includes:
+
+- JWT authentication.
+- Refresh token rotation.
+- Refresh token reuse detection.
+- HTTP-only refresh token cookies.
+- Role-based authorization.
+- Fine-grained permissions.
+- Resource ownership checks.
+- Request validation.
+- Structured logging with secret redaction.
+- Database transactions.
+- Idempotency for critical financial operations.
+- PostgreSQL relational constraints.
+
+For a detailed review of the current security considerations and known limitations, see:
+
+**[SECURITY.md](./SECURITY.md)**
+
+---
+
+## Architecture Documentation
+
+The detailed architectural decisions are documented separately:
+
+**[ARCHITECTURE.md](./ARCHITECTURE.md)**
+
+It covers:
+
+- Authentication architecture.
+- Authorization model.
+- Database design.
+- Monetary data representation.
+- Idempotency.
+- Transaction handling.
+- Frontend authentication.
+- BFF architecture.
+- Logging.
+- Testing strategy.
+- Deployment considerations.
+
+---
+
+## Project Status
+
+FinanceApi V3 is the current version of the project.
+
+The backend implements the main authentication, authorization, financial management and data-integrity flows, while the frontend provides the corresponding management interface.
+
+The repository is maintained as a portfolio project and as a technical demonstration of full-stack application architecture.
+
+---
+
+## Author
+
+**Miler Castro Martínez**
+
+Software Developer focused on **backend development, APIs and software that solves real business problems**.
+
+- GitHub: [@Devmillerr](https://github.com/Devmillerr)
+- LinkedIn: [linkedin.com/in/devmillerr](https://linkedin.com/in/devmillerr)
+
+---
+
+## License
+
+This project is presented as a portfolio project.
+
+See the repository configuration for the applicable license and usage terms.
