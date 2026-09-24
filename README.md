@@ -2,7 +2,7 @@
 
 A production-oriented financial management REST API built with **NestJS**, **PostgreSQL** (via **Prisma**), and **Supabase**. Handles clients, product catalog, purchases, budgets, invoices, and service contracts — with JWT authentication, role/permission-based access control, and resource ownership enforcement.
 
-This is a V2 → V3 rewrite. The original V2 (Express + TypeScript) had no real authentication in front of any endpoint, stored money as floating point, and had zero test coverage. The full before/after audit and the reasoning behind every architectural decision live in [`ARCHITECTURE.md`](./ARCHITECTURE.md) — this README is the entry point; that file is the paper trail.
+This is a V2 → V3 rewrite. The original V2 (Express + TypeScript) had no real authentication in front of any endpoint, stored money as floating point, and had zero test coverage. The reasoning behind every architectural decision lives in [`ARCHITECTURE.md`](./ARCHITECTURE.md) — this README is the entry point.
 
 ## Stack
 
@@ -84,8 +84,8 @@ GitHub Actions (`.github/workflows/ci.yml`) runs lint + build + unit tests on ev
 - Passwords hashed with bcrypt (12 rounds); refresh tokens stored as SHA-256 hashes, never in plaintext.
 - `helmet`, explicit CORS origin (no wildcard reflection), global `ValidationPipe` with `whitelist`/`forbidNonWhitelisted`, rate limiting (`@nestjs/throttler`, stricter on `/auth/login`).
 - Row Level Security enabled (deny-by-default, no policies) on every table in Supabase — closes off the auto-generated PostgREST API as an attack surface, since this app only ever connects through Prisma with its own connection string.
-- See `ARCHITECTURE.md` for the full audit of what V2 got wrong and how each issue was addressed.
+- See [`SECURITY.md`](./SECURITY.md) for the OWASP API Security Top 10 checklist and [`ARCHITECTURE.md`](./ARCHITECTURE.md) for design details.
 
 ## Status
 
-Backend: feature-complete and connected to a real frontend. All domain modules (auth, users, products, purchases, budgets, invoices, services, service-contracts), RBAC/permission management, and a read-only dashboard-stats endpoint are implemented, tested, and verified end-to-end against a live database. Frontend: an active Next.js dashboard (`apps/web`) already consumes this API — CRUD flows, role-based navigation, and the overview dashboard are wired up and working. Full phase-by-phase log in `ARCHITECTURE.md`.
+Backend: feature-complete and connected to a real frontend. All domain modules (auth, users, products, purchases, budgets, invoices, services, service-contracts), RBAC/permission management, and a read-only dashboard-stats endpoint are implemented, tested, and verified end-to-end against a live database. Frontend: a Next.js dashboard (`apps/web`) consumes this API — CRUD flows, role-based navigation, and the overview dashboard are wired up and working. See [`apps/web/README.md`](./apps/web/README.md) to run it locally.
